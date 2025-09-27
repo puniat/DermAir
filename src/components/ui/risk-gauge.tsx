@@ -1,115 +1,139 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { cn, getRiskColor } from "@/lib/utils";
 import { RiskGaugeProps } from "@/types";
+import { Shield, AlertTriangle, Activity } from "lucide-react";
 
 export function RiskGauge({ riskLevel, riskScore, recommendations, className }: RiskGaugeProps) {
   const colors = getRiskColor(riskLevel);
   
-  // Calculate the angle for the gauge needle (0-180 degrees)
-  const needleAngle = (riskScore / 100) * 180;
+  // Calculate the percentage for progress bar
+  const progressPercentage = riskScore;
   
   const getGaugeColor = () => {
     switch (riskLevel) {
       case "low":
-        return "#22c55e"; // green-500
+        return "rgb(34, 197, 94)"; // green-500
       case "medium":
-        return "hsl(var(--warning))";
+        return "rgb(251, 146, 60)"; // orange-400
       case "high":
-        return "hsl(var(--destructive))";
+        return "rgb(239, 68, 68)"; // red-500
+    }
+  };
+
+  const getRiskIcon = () => {
+    switch (riskLevel) {
+      case "low":
+        return <Shield className="w-4 h-4" />;
+      case "medium":
+        return <Activity className="w-4 h-4" />;
+      case "high":
+        return <AlertTriangle className="w-4 h-4" />;
+    }
+  };
+
+  const getBadgeVariant = () => {
+    switch (riskLevel) {
+      case "low":
+        return "default";
+      case "medium":
+        return "secondary";
+      case "high":
+        return "destructive";
+      default:
+        return "default";
     }
   };
 
   return (
-    <Card className={cn("w-full", className)}>
-      <CardContent className="p-6">
-        <div className="text-center space-y-6">
-          {/* Title */}
-          <div>
-            <h2 className="text-2xl font-bold mb-2">Today&apos;s Skin Risk</h2>
-            <p className="text-sm text-muted-foreground">
-              Based on weather conditions and your profile
-            </p>
-          </div>
-
-          {/* Gauge */}
-          <div className="relative mx-auto w-48 h-24 overflow-hidden">
-            {/* Background semicircle */}
-            <div className="absolute inset-0 w-48 h-24 border-b-8 border-l-8 border-r-8 border-muted rounded-t-full" />
-            
-            {/* Colored gauge sections */}
-            <div className="absolute inset-0 w-48 h-24">
-              {/* Low risk section (green) */}
-              <div 
-                className="absolute inset-0 w-16 h-24 border-b-4 border-green-500 rounded-tl-full origin-bottom-right"
-                style={{ 
-                  clipPath: "polygon(100% 100%, 0% 100%, 50% 0%)",
-                  transform: "rotate(0deg)",
-                }}
-              />
-              {/* Medium risk section (orange) */}
-              <div 
-                className="absolute inset-0 w-16 h-24 border-b-4 border-warning origin-bottom-left"
-                style={{ 
-                  clipPath: "polygon(0% 100%, 100% 100%, 50% 0%)",
-                  left: "50%",
-                  transform: "rotate(0deg)",
-                }}
-              />
-              {/* High risk section (red) */}
-              <div 
-                className="absolute inset-0 w-16 h-24 border-b-4 border-destructive rounded-tr-full origin-bottom-left"
-                style={{ 
-                  clipPath: "polygon(0% 100%, 100% 100%, 0% 0%)",
-                  right: "0%",
-                  transform: "rotate(0deg)",
-                }}
-              />
-            </div>
-            
-            {/* Needle */}
-            <motion.div
-              className="absolute bottom-0 left-1/2 w-0.5 bg-foreground origin-bottom"
-              style={{ height: "80px" }}
-              initial={{ rotate: 0 }}
-              animate={{ rotate: needleAngle - 90 }}
-              transition={{ duration: 1, ease: "easeOut" }}
-            />
-            
-            {/* Center dot */}
-            <div 
-              className="absolute bottom-0 left-1/2 w-3 h-3 rounded-full transform -translate-x-1/2 translate-y-1/2"
-              style={{ backgroundColor: getGaugeColor() }}
-            />
-          </div>
-
-          {/* Risk Level Display */}
-          <div className={cn("inline-flex items-center px-4 py-2 rounded-full", colors.bg, colors.border)}>
-            <div className={cn("w-2 h-2 rounded-full mr-2", colors.text)} style={{ backgroundColor: getGaugeColor() }} />
-            <span className={cn("font-semibold capitalize", colors.text)}>
-              {riskLevel} Risk ({riskScore}/100)
-            </span>
-          </div>
-
-          {/* Recommendations */}
-          {recommendations.length > 0 && (
+    <Card className={cn("w-full h-fit", className)}>
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-sm flex items-center gap-2">
+            {getRiskIcon()}
+            Today's Risk
+          </CardTitle>
+          <Badge variant={getBadgeVariant()} className="text-xs">
+            {riskLevel}
+          </Badge>
+        </div>
+        <p className="text-xs text-muted-foreground">Risk assessment for your skin</p>
+      </CardHeader>
+      <CardContent className="pt-0">
+        <div className="space-y-4">
+          {/* Main Risk Display - Left: Progress Bar, Right: Risk Level */}
+          <div className="grid grid-cols-2 gap-4">
+            {/* Left Side - Progress Bar with Score */}
             <div className="space-y-3">
-              <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
-                Recommended Actions
-              </h3>
+              <div className="text-center">
+                <motion.div 
+                  className="text-3xl font-bold"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
+                  style={{ color: getGaugeColor() }}
+                >
+                  {riskScore}
+                </motion.div>
+                <div className="text-sm text-muted-foreground">/ 100</div>
+              </div>
+              
+              {/* Horizontal Progress Bar */}
               <div className="space-y-2">
-                {recommendations.slice(0, 2).map((rec, index) => (
+                <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                  <motion.div
+                    className="h-full rounded-full transition-all duration-1000 ease-out"
+                    style={{ backgroundColor: getGaugeColor() }}
+                    initial={{ width: 0 }}
+                    animate={{ width: `${progressPercentage}%` }}
+                    transition={{ duration: 1.5, ease: "easeOut" }}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground text-center">Risk Level</p>
+              </div>
+            </div>
+
+            {/* Right Side - Risk Level Badge and Status */}
+            <div className="flex flex-col justify-center items-center space-y-3">
+              <div className={cn(
+                "inline-flex items-center justify-center w-16 h-16 rounded-full text-sm font-medium border-2 transition-all",
+                riskLevel === "low" ? "bg-green-50 border-green-200 text-green-700" :
+                riskLevel === "medium" ? "bg-orange-50 border-orange-200 text-orange-700" :
+                "bg-red-50 border-red-200 text-red-700"
+              )}>
+                <div className="text-center">
+                  {getRiskIcon()}
+                  <div className="text-xs mt-1 font-bold capitalize">{riskLevel}</div>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground text-center">
+                {riskLevel === "low" ? "• Low Risk" :
+                 riskLevel === "medium" ? "• Medium Risk" :
+                 "• High Risk"}
+              </p>
+            </div>
+          </div>
+
+          {/* Quick Actions - Compact */}
+          {recommendations.length > 0 && (
+            <div className="space-y-2 pt-2 border-t border-border/50">
+              <p className="text-xs font-medium text-muted-foreground">
+                QUICK ACTIONS
+              </p>
+              <div className="space-y-1.5">
+                {recommendations.slice(0, 3).map((rec, index) => (
                   <motion.div
                     key={index}
-                    initial={{ opacity: 0, x: -20 }}
+                    initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 1 + index * 0.2 }}
-                    className="flex items-start space-x-3 p-3 bg-muted/50 rounded-lg"
+                    transition={{ delay: 1 + index * 0.1 }}
+                    className="flex items-start gap-2 p-2 bg-primary/5 rounded-md text-xs hover:bg-primary/10 transition-colors cursor-pointer"
                   >
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
-                    <p className="text-sm text-foreground">{rec}</p>
+                    <div className="w-1 h-1 rounded-full bg-primary mt-1.5 flex-shrink-0" />
+                    <p className="text-xs leading-relaxed">{rec}</p>
                   </motion.div>
                 ))}
               </div>
