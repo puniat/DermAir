@@ -13,7 +13,7 @@ export function calculateRiskScore(
   recentSymptoms?: DailyLog[]
 ): number {
   let riskScore = 0;
-  let riskFactors: { factor: string; impact: number; description: string }[] = [];
+  const riskFactors: { factor: string; impact: number; description: string }[] = [];
   
   // Enhanced environmental factors with weighted scoring
   

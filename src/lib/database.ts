@@ -4,19 +4,27 @@ import { mkdir } from 'fs/promises';
 import type { UserProfile, DailyLog, DailyCheckInFormData, WeatherData } from '@/types';
 
 class DatabaseService {
-  private db: Database.Database;
+  private db: Database.Database | null = null;
   private initialized = false;
 
   constructor() {
-    // Initialize database in development
-    const dbPath = process.env.NODE_ENV === 'production' 
-      ? path.join(process.cwd(), 'data', 'dermair.db')
-      : path.join(process.cwd(), 'dev.db');
-    
-    this.db = new Database(dbPath);
-    
-    // Enable WAL mode for better concurrency
-    this.db.pragma('journal_mode = WAL');
+    // Only skip during server-side rendering/build, not runtime
+    if (typeof window !== 'undefined') {
+      return; // Skip on client side
+    }
+
+    try {
+      // Initialize database on server side
+      const dbPath = path.join(process.cwd(), 'dev.db');
+      
+      this.db = new Database(dbPath);
+      
+      // Enable WAL mode for better concurrency
+      this.db.pragma('journal_mode = WAL');
+    } catch (error) {
+      console.warn('Database initialization failed:', error);
+      this.db = null;
+    }
   }
 
   async initialize(): Promise<void> {

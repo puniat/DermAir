@@ -10,12 +10,14 @@ import { LocationStep } from "@/components/onboarding/location-step";
 import { TriggersStep } from "@/components/onboarding/triggers-step";
 import { SeverityStep } from "@/components/onboarding/severity-step";
 import { CompletionStep } from "@/components/onboarding/completion-step";
+import { useUserSession } from "@/hooks/useUserSession";
 import type { UserProfile } from "@/types";
 
 const TOTAL_STEPS = 5;
 
 export default function OnboardingPage() {
   const router = useRouter();
+  const { session, updateProfile: updateSessionProfile } = useUserSession();
   const [currentStep, setCurrentStep] = useState(1);
   const [profile, setProfile] = useState<Partial<UserProfile>>({
     triggers: [],
@@ -44,16 +46,34 @@ export default function OnboardingPage() {
 
   const completeOnboarding = async () => {
     try {
-      // Here we'll save the profile to the database
-      console.log("Saving profile:", profile);
+      if (!session) {
+        console.error("No session available");
+        return;
+      }
+
+      // Create the complete profile with session user ID
+      const completeProfile: UserProfile = {
+        id: session.userId,
+        skin_type: profile.skin_type!,
+        location: profile.location!,
+        triggers: profile.triggers || [],
+        severityHistory: profile.severityHistory || [],
+        preferences: profile.preferences || {
+          notifications: true,
+          riskThreshold: "moderate"
+        },
+        created_at: new Date()
+      };
+
+      console.log(`✅ Completing onboarding for user ${session.userId}:`, completeProfile);
       
-      // For now, save to localStorage
-      localStorage.setItem("dermair-profile", JSON.stringify(profile));
+      // Update session profile (this handles localStorage storage)
+      updateSessionProfile(completeProfile);
       
       // Redirect to dashboard
       router.push("/dashboard");
     } catch (error) {
-      console.error("Error saving profile:", error);
+      console.error("Error completing onboarding:", error);
     }
   };
 

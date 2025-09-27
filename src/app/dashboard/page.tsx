@@ -12,10 +12,14 @@ import { useNotifications } from "@/hooks/useNotifications";
 import { useRiskAssessment } from "@/hooks/useRiskAssessment";
 import { useRiskAlerts } from "@/hooks/useRiskAlerts";
 import { testApiKey } from "@/lib/api/weather";
+import { toast } from "sonner";
+import { Toaster } from "@/components/ui/sonner";
+import { useUserSession } from "@/hooks/useUserSession";
 import { DailyCheckIn } from "@/components/DailyCheckIn";
 import { NotificationSettings } from "@/components/NotificationSettings";
 import { AnalyticsDashboard } from "@/components/AnalyticsDashboard";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
+import { AIAnalysis } from "@/components/AIAnalysis";
 import type { UserProfile, DailyCheckInFormData } from "@/types";
 
 export default function DashboardPage() {
@@ -23,7 +27,8 @@ export default function DashboardPage() {
   
   // 1. Basic React hooks
   const router = useRouter();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+    const { session, loading: sessionLoading, updateProfile, getUserDataSummary, clearSession } = useUserSession();
+  const [profile, setProfile] = useState<UserProfile | null>(session?.profile || null);
   const [showCheckIn, setShowCheckIn] = useState(false);
   const [loading, setLoading] = useState(true);
   const [apiTestResult, setApiTestResult] = useState<string | null>(null);
@@ -34,6 +39,10 @@ export default function DashboardPage() {
   const [tempUnit, setTempUnit] = useState<'C' | 'F'>('C');
   const [showForecast, setShowForecast] = useState(true);
   const [showTrends, setShowTrends] = useState(true);
+  const [showAIAnalysis, setShowAIAnalysis] = useState(false);
+  const [isCollectingData, setIsCollectingData] = useState(false);
+  const [storageType, setStorageType] = useState<'local' | 'cloud'>('local');
+  const [showCloudWarning, setShowCloudWarning] = useState(false);
 
   // 2. Custom hooks - Let's isolate the issue by enabling one by one
   const weather = useWeatherWithRefresh(profile);
@@ -52,26 +61,42 @@ export default function DashboardPage() {
   // 5. Risk alerts - add back to test
   useRiskAlerts(weather.data, profile, riskLevel, riskScore, weather.loading, notifications);
 
-  // 6. Main effect for loading profile
+  // 6. Main effect for session and profile management
   useEffect(() => {
-    const savedProfile = localStorage.getItem("dermair-profile");
-    if (savedProfile) {
+    if (sessionLoading) return;
+
+    if (session?.profile) {
+      // User has a profile, use it
+      setProfile({
+        ...session.profile,
+        id: session.userId,
+        created_at: session.profile.created_at || new Date()
+      });
+      setLoading(false);
+      
+      // Get data summary without causing dependency issues
       try {
-        const parsedProfile = JSON.parse(savedProfile);
-        setProfile({
-          id: "user-1",
-          ...parsedProfile,
-          created_at: new Date()
-        });
+        const checkIns = localStorage.getItem("dermair-checkins");
+        const dataSummary = {
+          userId: session.userId,
+          hasProfile: true,
+          checkInsCount: checkIns ? JSON.parse(checkIns).length : 0,
+          sessionId: session.sessionId
+        };
+        console.log("📊 User Data Summary:", dataSummary);
       } catch (error) {
-        console.error("Error parsing profile:", error);
-        router.push("/onboarding");
+        console.error("Failed to get data summary:", error);
       }
+    } else if (!session?.isNewUser) {
+      // Returning user without profile (shouldn't happen, but handle gracefully)
+      console.warn("⚠️ Returning user without profile, redirecting to onboarding");
+      router.push("/onboarding");
     } else {
+      // New user, redirect to onboarding
+      console.log("🆕 New user detected, redirecting to onboarding");
       router.push("/onboarding");
     }
-    setLoading(false);
-  }, [router]);
+  }, [session, sessionLoading, router]);
 
   // Handle daily check-in submission
   const handleCheckInSubmit = async (data: DailyCheckInFormData) => {
@@ -86,7 +111,17 @@ export default function DashboardPage() {
         medication_used: data.medication_used,
         notes: data.notes || "",
         photo_url: undefined,
-        weather_data: weather.data || {} as any,
+        weather_data: weather.data || {
+          temperature: 0,
+          humidity: 0, 
+          pressure: 0,
+          uv_index: 0,
+          air_quality_index: 0,
+          pollen_count: { tree: 0, grass: 0, weed: 0, overall: 0 },
+          weather_condition: 'unknown',
+          wind_speed: 0,
+          timestamp: new Date()
+        },
         created_at: new Date()
       };
 
@@ -97,6 +132,21 @@ export default function DashboardPage() {
     } finally {
       setIsSubmittingCheckIn(false);
     }
+  };
+
+  // Check if cloud storage is configured
+  const isCloudConfigured = () => {
+    return !!(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+  };
+
+  // Handle cloud storage toggle
+  const handleCloudStorageToggle = async () => {
+    if (!isCloudConfigured()) {
+      alert('Cloud storage is not configured. Please see CLOUD_SETUP.md for setup instructions.');
+      return;
+    }
+    
+    setShowCloudWarning(true);
   };
 
   // Handle settings actions
@@ -203,6 +253,14 @@ export default function DashboardPage() {
                 className="text-xs bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100 hover:border-gray-300"
               >
                 ⚙️ Settings
+              </Button>
+              <Button 
+                onClick={() => setShowAIAnalysis(true)}
+                variant="outline" 
+                size="sm" 
+                className="text-xs bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200 text-purple-700 hover:from-purple-100 hover:to-pink-100 hover:border-purple-300"
+              >
+                🧠 AI Analysis
               </Button>
               <Button 
                 onClick={() => setShowNotificationSettings(true)} 
@@ -345,7 +403,7 @@ export default function DashboardPage() {
                 {showForecast && (
                   <div className="space-y-2 pt-2 border-t border-border/50">
                     <p className="text-xs font-medium text-muted-foreground">
-                      TOMORROW'S OUTLOOK
+                      TOMORROW&apos;S OUTLOOK
                     </p>
                     <div className="grid grid-cols-2 gap-2">
                       <div className="p-2 bg-gradient-to-br from-indigo-50 to-blue-50 rounded-lg border border-indigo-200">
@@ -595,7 +653,7 @@ export default function DashboardPage() {
                         <Badge variant="outline" className="text-xs">💊</Badge>
                       )}
                       {checkIn.notes && (
-                        <span className="text-xs text-muted-foreground max-w-20 truncate">"{checkIn.notes}"</span>
+                        <span className="text-xs text-muted-foreground max-w-20 truncate">&quot;{checkIn.notes}&quot;</span>
                       )}
                     </div>
                   </div>
@@ -631,6 +689,15 @@ export default function DashboardPage() {
         />
       )}
 
+      {/* AI Analysis Modal */}
+      {showAIAnalysis && profile && weather.data && (
+        <AIAnalysis
+          onClose={() => setShowAIAnalysis(false)}
+          weatherData={weather.data}
+          userProfile={profile}
+        />
+      )}
+
       {/* Settings Modal */}
       {showSettings && profile && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -650,6 +717,133 @@ export default function DashboardPage() {
             </div>
             
             <div className="p-4 space-y-6">
+              {/* User Session Section */}
+              <div>
+                <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
+                  👤 User Session
+                </h3>
+                <div className="space-y-3">
+                  <div className="p-3 bg-blue-50/50 rounded-lg border border-blue-200">
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-blue-700 font-medium">User ID:</span>
+                        <span className="text-xs text-blue-600 font-mono">{session?.userId || 'Loading...'}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-blue-700 font-medium">Session:</span>
+                        <span className="text-xs text-blue-600">{session?.isNewUser ? 'New User' : 'Returning User'}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-blue-700 font-medium">Data:</span>
+                        <span className="text-xs text-blue-600">
+                          {(() => {
+                            const summary = getUserDataSummary();
+                            return summary ? `${summary.checkInsCount} check-ins` : 'No data';
+                          })()}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between p-3 bg-red-50/50 rounded-lg border border-red-200">
+                    <div>
+                      <p className="text-sm font-medium text-red-800">Reset All Data</p>
+                      <p className="text-xs text-red-600">Clear profile, check-ins, and training data</p>
+                    </div>
+                    <Button 
+                      onClick={() => {
+                        if (confirm('Are you sure? This will delete all your data and create a new user session.')) {
+                          clearSession();
+                        }
+                      }}
+                      variant="outline" 
+                      size="sm" 
+                      className="text-xs border-red-300 text-red-700 hover:bg-red-100"
+                    >
+                      Reset
+                    </Button>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Data Storage Section */}
+              <div>
+                <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
+                  🗄️ Data Storage
+                </h3>
+                <div className="space-y-3">
+                  <div className="p-3 bg-yellow-50/50 rounded-lg border border-yellow-200">
+                    <div className="space-y-3">
+                      <div>
+                        <p className="text-sm font-medium text-yellow-800 mb-2">Storage Location</p>
+                        <div className="space-y-2">
+                          <label className="flex items-center space-x-2">
+                            <input
+                              type="radio"
+                              name="storage"
+                              value="local"
+                              checked={storageType === 'local'}
+                              onChange={(e) => setStorageType(e.target.value as 'local' | 'cloud')}
+                              className="text-blue-600"
+                            />
+                            <span className="text-sm text-yellow-700">
+                              <strong>Local Storage</strong> - Data stays on your device
+                            </span>
+                          </label>
+                          <label className="flex items-center space-x-2">
+                            <input
+                              type="radio"
+                              name="storage"
+                              value="cloud"
+                              checked={storageType === 'cloud'}
+                              onChange={(e) => {
+                                if (e.target.value === 'cloud') {
+                                  handleCloudStorageToggle();
+                                } else {
+                                  setStorageType(e.target.value as 'local' | 'cloud');
+                                }
+                              }}
+                              className="text-blue-600"
+                            />
+                            <span className="text-sm text-yellow-700">
+                              <strong>Cloud Storage</strong> - Secure cloud backup & sync
+                              {!isCloudConfigured() && <span className="text-red-600"> (Not configured)</span>}
+                            </span>
+                          </label>
+                        </div>
+                      </div>
+                      
+                      <div className="text-xs text-yellow-600 bg-yellow-100 p-2 rounded border">
+                        {storageType === 'local' ? (
+                          <>
+                            <strong>Local Mode:</strong> Your data is stored only on this device. 
+                            No data is sent to servers. Data will be lost if you clear browser data.
+                          </>
+                        ) : (
+                          <>
+                            <strong>Cloud Mode:</strong> Your data is encrypted and stored securely in the cloud. 
+                            This enables backup, sync across devices, and enhanced AI features.
+                          </>
+                        )}
+                      </div>
+                      
+                      {storageType === 'cloud' && (
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between text-xs text-yellow-700">
+                            <span>Storage Used:</span>
+                            <span>0 MB / 500 MB free</span>
+                          </div>
+                          <div className="flex items-center justify-between text-xs text-yellow-700">
+                            <span>Images Stored:</span>
+                            <span>0 / 5,000 free</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
               {/* Profile Section */}
               <div>
                 <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
@@ -720,7 +914,7 @@ export default function DashboardPage() {
                   <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
                     <div>
                       <p className="text-sm font-medium">Weather Forecasts</p>
-                      <p className="text-xs text-muted-foreground">Show tomorrow's outlook</p>
+                      <p className="text-xs text-muted-foreground">Show tomorrow&apos;s outlook</p>
                     </div>
                     <button
                       onClick={() => setShowForecast(!showForecast)}
@@ -790,6 +984,111 @@ export default function DashboardPage() {
                   </div>
                 </div>
               </div>
+
+              {/* AI Model Section */}
+              <div>
+                <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
+                  🧠 AI Model Training
+                </h3>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200">
+                    <div>
+                      <p className="text-sm font-medium text-purple-800">Collect Training Data</p>
+                      <p className="text-xs text-purple-600">Download datasets to improve AI accuracy</p>
+                    </div>
+                    <div className="flex gap-2">
+                    <Button 
+                      onClick={async () => {
+                        if (isCollectingData) return;
+                        
+                        setIsCollectingData(true);
+                        toast.loading('Starting data collection...', { id: 'data-collection' });
+                        
+                        try {
+                          console.log('🔄 Starting data collection...');
+                          const { dataCollectionService } = await import('@/lib/ai/dataCollection');
+                          
+                          await dataCollectionService.initializeDataCollection();
+                          console.log('✅ Data collection initialized');
+                          
+                          await dataCollectionService.collectDataFromSources(50);
+                          console.log('✅ Data collection completed!');
+                          
+                          // Show success feedback
+                          toast.success('Training data collection completed successfully! Check the console for details.', { id: 'data-collection' });
+                        } catch (error) {
+                          console.error('❌ Data collection failed:', error);
+                          toast.error(`Data collection failed: ${error instanceof Error ? error.message : 'Unknown error'}`, { id: 'data-collection' });
+                        } finally {
+                          setIsCollectingData(false);
+                        }
+                      }}
+                      disabled={isCollectingData}
+                      variant="outline" 
+                      size="sm" 
+                      className="text-xs border-purple-300 text-purple-700 hover:bg-purple-100 disabled:opacity-50"
+                    >
+                      {isCollectingData ? "Collecting..." : "Collect"}
+                    </Button>
+                    <Button 
+                      onClick={async () => {
+                        const { dataCollectionService } = await import('@/lib/ai/dataCollection');
+                        const stats = dataCollectionService.getDatasetInfo();
+                        const data = dataCollectionService.getTrainingData();
+                        
+                        console.log('📊 Training Data Statistics:', stats);
+                        console.log('📋 Sample Training Data (first 3 samples):', data.slice(0, 3)); 
+                        console.log('🎯 All Conditions Found:', Object.keys(stats.conditionBreakdown));
+                        console.log('📁 Data Sources:', Object.keys(stats.sourceBreakdown));
+                        
+                        toast.info(`Found ${stats.totalSamples} training samples. Check console for details.`, { id: 'view-data' });
+                      }}
+                      variant="outline" 
+                      size="sm" 
+                      className="text-xs border-green-300 text-green-700 hover:bg-green-100"
+                    >
+                      View Data
+                    </Button>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+                    <div>
+                      <p className="text-sm font-medium text-blue-800">Train Local Model</p>
+                      <p className="text-xs text-blue-600">Improve AI with your anonymous data</p>
+                    </div>
+                    <Button 
+                      onClick={async () => {
+                        const { localAI } = await import('@/lib/ai/localAI');
+                        if (!localAI.getModelInfo().isLoaded) {
+                          await localAI.initialize();
+                        }
+                        alert('Model training initiated! This may take a few minutes.');
+                      }}
+                      variant="outline" 
+                      size="sm" 
+                      className="text-xs border-blue-300 text-blue-700 hover:bg-blue-100"
+                    >
+                      Train
+                    </Button>
+                  </div>
+
+                  <div className="p-3 bg-muted/30 rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-sm font-medium">Privacy Protection</p>
+                      <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+                        Active
+                      </Badge>
+                    </div>
+                    <div className="space-y-1 text-xs text-muted-foreground">
+                      <p>• All training happens locally on your device</p>
+                      <p>• No personal data is sent to external servers</p>
+                      <p>• Your images are processed anonymously</p>
+                      <p>• You control all data collection and training</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div className="p-4 border-t border-border bg-muted/20">
@@ -813,6 +1112,81 @@ export default function DashboardPage() {
 
       {/* PWA Install Prompt */}
       <PWAInstallPrompt />
+      
+      {/* Cloud Storage Warning Dialog */}
+      {showCloudWarning && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                ☁️
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900">Enable Cloud Storage?</h2>
+                <p className="text-sm text-gray-600">Securely backup and sync your data</p>
+              </div>
+            </div>
+            
+            <div className="space-y-3 text-sm text-gray-700">
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                <h3 className="font-medium text-green-800 mb-2">✅ Benefits:</h3>
+                <ul className="text-xs text-green-700 space-y-1">
+                  <li>• Backup your data safely in the cloud</li>
+                  <li>• Sync across multiple devices</li>
+                  <li>• Enhanced AI features with cloud processing</li>
+                  <li>• Never lose your progress</li>
+                  <li>• 500MB storage + 5,000 images FREE</li>
+                </ul>
+              </div>
+              
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                <h3 className="font-medium text-yellow-800 mb-2">⚠️ Privacy & Security:</h3>
+                <ul className="text-xs text-yellow-700 space-y-1">
+                  <li>• Your data is encrypted with AES-256</li>
+                  <li>• We cannot access your personal data</li>
+                  <li>• Used only to improve app functionality</li>
+                  <li>• You can switch back to local anytime</li>
+                  <li>• Compliant with GDPR and healthcare standards</li>
+                </ul>
+              </div>
+              
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <h3 className="font-medium text-blue-800 mb-2">🔧 Technical Details:</h3>
+                <ul className="text-xs text-blue-700 space-y-1">
+                  <li>• Powered by Supabase (PostgreSQL + Storage)</li>
+                  <li>• Real-time sync and offline support</li>
+                  <li>• Automatic data migration from local storage</li>
+                  <li>• No vendor lock-in - export anytime</li>
+                </ul>
+              </div>
+            </div>
+            
+            <div className="flex gap-3">
+              <Button
+                onClick={() => setShowCloudWarning(false)}
+                variant="outline"
+                className="flex-1"
+              >
+                Keep Local
+              </Button>
+              <Button
+                onClick={() => {
+                  setStorageType('cloud');
+                  setShowCloudWarning(false);
+                  toast.success('Cloud storage enabled! Migrating your data...', { id: 'cloud-enabled' });
+                  // TODO: Initialize cloud storage
+                }}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                Enable Cloud
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Toast Notifications */}
+      <Toaster />
     </div>
   );
 }

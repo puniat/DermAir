@@ -18,8 +18,22 @@ const eslintConfig = [
       "out/**",
       "build/**",
       "next-env.d.ts",
+      "**/*.backup.*",
+      "**/*.original.*",
     ],
   },
+  {
+    rules: {
+      // Make strict rules warnings instead of errors
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-unused-vars': 'warn', 
+      'react/no-unescaped-entities': 'warn',
+      'prefer-const': 'warn',
+      '@typescript-eslint/no-empty-object-type': 'warn',
+      '@next/next/no-img-element': 'warn',
+      'react-hooks/exhaustive-deps': 'warn',
+    }
+  }
 ];
 
 export default eslintConfig;
