@@ -12,6 +12,7 @@ import { SeverityStep } from "@/components/onboarding/severity-step";
 import { CompletionStep } from "@/components/onboarding/completion-step";
 import { useUserSession } from "@/hooks/useUserSession";
 import type { UserProfile } from "@/types";
+import { saveUserProfile } from '@/lib/services/firestore-data';
 
 const TOTAL_STEPS = 5;
 
@@ -69,6 +70,27 @@ export default function OnboardingPage() {
       
       // Update session profile (this handles localStorage storage)
       updateSessionProfile(completeProfile);
+      
+      // Google sync is disabled for Firebase demo
+      /*
+      try {
+        const { googleAuth } = await import('@/lib/services/google-auth');
+        const { googleSheets } = await import('@/lib/services/google-sheets');
+        
+        if (googleAuth.isAuthenticated()) {
+          console.log('Syncing profile to Google Sheets...');
+          await googleSheets.saveProfile(completeProfile);
+          console.log('✅ Profile synced to Google Sheets');
+        }
+      } catch (syncError) {
+        console.warn('Failed to sync to Google Sheets:', syncError);
+        // Continue anyway - local profile is saved
+      }
+      */
+      
+      // Save to Firestore
+      await saveUserProfile(completeProfile);
+      console.log('✅ Profile saved to Firestore');
       
       // Redirect to dashboard
       router.push("/dashboard");

@@ -3,6 +3,7 @@ import type { WeatherData } from "@/types";
 const OPENWEATHER_API_KEY = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY;
 const BASE_URL = "https://api.openweathermap.org/data/2.5";
 const AIR_POLLUTION_URL = "https://api.openweathermap.org/data/2.5/air_pollution";
+const GEO_URL = "https://api.openweathermap.org/geo/1.0";
 
 // Debug logging for API key
 if (typeof window !== 'undefined') {
@@ -15,6 +16,7 @@ export interface OpenWeatherResponse {
     temp: number;
     humidity: number;
     pressure: number;
+    feels_like: number;
   };
   weather: Array<{
     main: string;
@@ -46,6 +48,54 @@ export interface AirPollutionResponse {
       nh3: number;
     };
   }>;
+}
+
+export interface GeocodingResponse {
+  name: string;
+  lat: number;
+  lon: number;
+  country: string;
+  state?: string;
+}
+
+/**
+ * Fetch weather data by zipcode (most accurate for US locations)
+ */
+export async function fetchWeatherByZipcode(zipcode: string, countryCode: string = 'US'): Promise<WeatherData> {
+  if (!OPENWEATHER_API_KEY) {
+    console.warn("OpenWeatherMap API key not configured, using mock data");
+    return getMockWeatherData();
+  }
+
+  try {
+    // First, get coordinates for the zipcode using OpenWeatherMap's geocoding
+    const geoResponse = await fetch(
+      `${GEO_URL}/zip?zip=${zipcode},${countryCode}&appid=${OPENWEATHER_API_KEY}`
+    );
+
+    if (!geoResponse.ok) {
+      if (geoResponse.status === 401) {
+        console.error("OpenWeatherMap API key is invalid");
+        return getMockWeatherData();
+      }
+      if (geoResponse.status === 404) {
+        console.error(`Invalid zipcode: ${zipcode} - API returned 404`);
+        throw new Error(`Invalid zipcode: ${zipcode}`);
+      }
+      console.error(`Geocoding API error for zipcode ${zipcode}: ${geoResponse.status}`);
+      throw new Error(`Geocoding API error: ${geoResponse.status}`);
+    }
+
+    const geoData: GeocodingResponse = await geoResponse.json();
+    console.log(`📍 Zipcode ${zipcode} resolved to: ${geoData.name}, ${geoData.country} (${geoData.lat}, ${geoData.lon})`);
+
+    // Now fetch weather data using the coordinates
+    return await fetchWeatherData(geoData.lat, geoData.lon);
+  } catch (error) {
+    console.error("Error fetching weather by zipcode:", error);
+    console.warn("Falling back to mock weather data");
+    return getMockWeatherData();
+  }
 }
 
 /**
@@ -106,18 +156,28 @@ export async function fetchWeatherData(
     // Generate intelligent pollen estimate based on weather conditions
     const pollenEstimate = calculatePollenEstimate(weatherData, new Date());
 
-    // Convert to our WeatherData format
+    // Convert to our WeatherData format with improved accuracy
     const result: WeatherData = {
-      temperature: Math.round(weatherData.main.temp),
-      humidity: weatherData.main.humidity,
-      pressure: weatherData.main.pressure,
+      // Use actual temperature, but log both actual and feels-like for comparison
+      temperature: Math.round(weatherData.main.temp * 10) / 10, // More precise rounding
+      humidity: Math.round(weatherData.main.humidity),
+      pressure: Math.round(weatherData.main.pressure),
       uv_index: uvIndex,
       air_quality_index: airQualityIndex * 20, // Convert 1-5 scale to 0-100
       pollen_count: pollenEstimate,
       weather_condition: weatherData.weather[0]?.description || "Unknown",
-      wind_speed: Math.round(weatherData.wind.speed * 3.6), // Convert m/s to km/h
+      wind_speed: Math.round(weatherData.wind.speed * 3.6 * 10) / 10, // More precise wind speed
       timestamp: new Date(),
     };
+
+    // Log comparison data for debugging accuracy
+    console.log(`🌡️ Weather Data Accuracy Check:
+      Actual: ${result.temperature}°C (${Math.round(result.temperature * 9/5 + 32)}°F)
+      Feels Like: ${Math.round(weatherData.main.feels_like * 10) / 10}°C (${Math.round(weatherData.main.feels_like * 9/5 + 32)}°F)
+      Humidity: ${result.humidity}%
+      Pressure: ${result.pressure} hPa
+      Wind: ${result.wind_speed} km/h
+    `);
 
     return result;
   } catch (error) {
@@ -154,6 +214,18 @@ export async function fetchWeatherByCity(city: string): Promise<WeatherData> {
 
     const geoData = await geoResponse.json();
     if (!geoData.length) {
+      // Check if the input might be a zipcode that was passed as city
+      if (/^\d{5}(-\d{4})?$/.test(city)) {
+        console.warn(`Detected zipcode format in city field: ${city}, attempting zipcode lookup`);
+        const detectedZipcode = city; // Rename for clarity
+        try {
+          return await fetchWeatherByZipcode(detectedZipcode, 'US');
+        } catch (zipcodeError) {
+          console.error(`Zipcode lookup also failed for ${detectedZipcode}:`, zipcodeError);
+          console.warn("Falling back to mock weather data");
+          return getMockWeatherData();
+        }
+      }
       throw new Error(`City not found: ${city}`);
     }
 
@@ -346,6 +418,39 @@ function getMockWeatherData(): WeatherData {
     ][Math.floor(Math.random() * 5)],
     wind_speed: Math.floor(Math.random() * 25) + 5, // 5-30 km/h
     timestamp: new Date(),
+  };
+}
+
+/**
+ * Get geocoding data for a zipcode (for client-side use)
+ */
+export async function getLocationByZipcode(zipcode: string, countryCode: string = 'US'): Promise<{
+  name: string;
+  country: string;
+  lat: number;
+  lon: number;
+}> {
+  if (!OPENWEATHER_API_KEY) {
+    throw new Error("OpenWeatherMap API key not configured");
+  }
+
+  const response = await fetch(
+    `${GEO_URL}/zip?zip=${zipcode},${countryCode}&appid=${OPENWEATHER_API_KEY}`
+  );
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      throw new Error(`Invalid zipcode: ${zipcode}`);
+    }
+    throw new Error(`Geocoding API error: ${response.status}`);
+  }
+
+  const data: GeocodingResponse = await response.json();
+  return {
+    name: data.name,
+    country: data.country,
+    lat: data.lat,
+    lon: data.lon
   };
 }
 

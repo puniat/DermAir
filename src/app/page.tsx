@@ -1,30 +1,43 @@
-﻿import Link from "next/link";
-import { Button } from "@/components/ui/button";
+﻿"use client";
+
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { Loader2 } from 'lucide-react';
 
 export default function HomePage() {
-  return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="text-center space-y-6">
-        <h1 className="text-5xl font-bold text-primary">DermAIr</h1>
-        <p className="text-xl text-muted-foreground">
-          Your personalized skin-weather companion
-        </p>
-        <div className="bg-warning/10 p-4 rounded-lg border border-warning/20">
-          <p className="text-sm">
-            <strong>NOT medical advice.</strong> Consult healthcare professionals.
-          </p>
-        </div>
+  const router = useRouter();
+
+  useEffect(() => {
+    // Check for existing profile
+    const checkProfile = () => {
+      try {
+        const profile = localStorage.getItem('dermair-profile');
         
-        <div className="space-y-3 pt-4">
-          <Link href="/onboarding">
-            <Button size="lg" className="w-full max-w-sm">
-              Get Started
-            </Button>
-          </Link>
-          <p className="text-sm text-muted-foreground">
-            Set up your personalized skin-weather companion in just a few steps
-          </p>
+        if (profile) {
+          // Profile exists, go to dashboard
+          router.replace('/dashboard');
+        } else {
+          // No profile, go to landing page
+          router.replace('/landing');
+        }
+      } catch (error) {
+        console.error('Error checking profile:', error);
+        // Default to landing page on error
+        router.replace('/landing');
+      }
+    };
+
+    checkProfile();
+  }, [router]);
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-50 via-white to-blue-50">
+      <div className="text-center">
+        <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-teal-500 to-teal-600 rounded-2xl mb-6 shadow-lg">
+          <span className="text-white font-bold text-2xl">D</span>
         </div>
+        <Loader2 className="h-8 w-8 animate-spin text-teal-600 mx-auto mb-4" />
+        <p className="text-gray-600">Loading DermAIr...</p>
       </div>
     </div>
   );

@@ -17,6 +17,7 @@ export interface UserProfile {
   location?: {
     city: string;
     country: string;
+    zipcode?: string;
     latitude?: number;
     longitude?: number;
     timezone?: string;
@@ -80,7 +81,7 @@ export interface ApiResponse<T> {
 
 // Component Props Types
 export interface RiskGaugeProps {
-  riskLevel: "low" | "medium" | "high";
+  riskLevel: "low" | "medium" | "high" | "severe";
   riskScore: number;
   recommendations: string[];
   className?: string;

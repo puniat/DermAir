@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import type { DailyLog } from "@/types";
+import { saveCheckIn, loadCheckIns as loadCheckInsFromFirestoreAPI } from '@/lib/services/firestore-data';
 
 export function useCheckIns() {
   const [checkIns, setCheckIns] = useState<DailyLog[]>([]);
@@ -31,6 +32,21 @@ export function useCheckIns() {
     }
   };
 
+  // Renamed to avoid shadowing the imported function
+  const loadCheckInsFromFirestore = async (profileId: string) => {
+    setLoading(true);
+    try {
+      const data = await loadCheckInsFromFirestoreAPI(profileId);
+      setCheckIns(data);
+      setError(null);
+    } catch (err) {
+      setError('Failed to load check-ins from Firestore');
+      setCheckIns([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const addCheckIn = (checkIn: DailyLog) => {
     try {
       const existing = JSON.parse(localStorage.getItem("dermair-checkins") || "[]");
@@ -47,6 +63,15 @@ export function useCheckIns() {
       loadCheckIns(); // Refresh the state
     } catch (err) {
       setError("Failed to save check-in");
+    }
+  };
+
+  const addCheckInToFirestoreAPI = async (profileId: string, checkIn: DailyLog) => {
+    try {
+      await saveCheckIn(profileId, checkIn);
+      await loadCheckInsFromFirestore(profileId);
+    } catch (err) {
+      setError('Failed to save check-in to Firestore');
     }
   };
 
@@ -94,9 +119,13 @@ export function useCheckIns() {
     loading,
     error,
     addCheckIn,
+    addCheckInToFirestoreAPI,
     getRecentCheckIns,
     getTodaysCheckIn,
     getAverageScores,
     refresh: loadCheckIns
   };
 }
+
+// To use Firestore, call loadCheckInsFromFirestoreAPI(profileId) and addCheckInToFirestoreAPI(profileId, checkIn)
+// To use localStorage, call loadCheckIns() and addCheckIn(checkIn)

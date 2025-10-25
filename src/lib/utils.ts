@@ -321,7 +321,7 @@ export function formatDate(date: Date): string {
 }
 
 // Color utilities for risk levels
-export function getRiskColor(riskLevel: "low" | "medium" | "high"): {
+export function getRiskColor(riskLevel: "low" | "medium" | "high" | "severe"): {
   bg: string;
   text: string;
   border: string;
@@ -344,6 +344,12 @@ export function getRiskColor(riskLevel: "low" | "medium" | "high"): {
         bg: "bg-destructive/10",
         text: "text-destructive-foreground",
         border: "border-destructive/20",
+      };
+    case "severe":
+      return {
+        bg: "bg-red-100",
+        text: "text-red-900",
+        border: "border-red-300",
       };
   }
 }

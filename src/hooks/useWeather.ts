@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { fetchWeatherData, fetchWeatherByCity, getCurrentLocation, reverseGeocode } from "@/lib/api/weather";
+import { fetchWeatherData, fetchWeatherByCity, fetchWeatherByZipcode, getCurrentLocation, reverseGeocode } from "@/lib/api/weather";
 import type { WeatherData, UserProfile } from "@/types";
 
 export interface WeatherState {
@@ -15,6 +15,7 @@ export interface UseWeatherResult extends WeatherState {
   refetch: () => Promise<void>;
   fetchByLocation: (lat: number, lon: number) => Promise<void>;
   fetchByCity: (city: string) => Promise<void>;
+  fetchByZipcode: (zipcode: string, countryCode?: string) => Promise<void>;
   fetchByCurrentLocation: () => Promise<void>;
 }
 
@@ -88,31 +89,74 @@ export function useWeather(profile?: UserProfile | null): UseWeatherResult {
     }
   }, [fetchByLocation, updateState]);
 
-  // Generic refetch function
+  // Fetch weather by zipcode
+  const fetchByZipcode = useCallback(async (zipcode: string, countryCode: string = 'US') => {
+    updateState({ loading: true, error: null });
+    
+    try {
+      const weatherData = await fetchWeatherByZipcode(zipcode, countryCode);
+      updateState({
+        data: weatherData,
+        loading: false,
+        lastUpdated: new Date(),
+      });
+    } catch (error) {
+      updateState({
+        loading: false,
+        error: error instanceof Error ? error.message : "Failed to fetch weather by zipcode",
+      });
+    }
+  }, [updateState]);
+
+  // Generic refetch function - FIXED to prevent circular dependencies
   const refetch = useCallback(async () => {
     if (profile?.location) {
-      if (profile.location.latitude && profile.location.longitude) {
+      // Prioritize zipcode for better accuracy
+      if (profile.location.zipcode) {
+        await fetchByZipcode(profile.location.zipcode, profile.location.country || 'US');
+      } else if (profile.location.latitude && profile.location.longitude) {
         await fetchByLocation(profile.location.latitude, profile.location.longitude);
       } else if (profile.location.city) {
-        await fetchByCity(profile.location.city);
+        // Check if city might be a zipcode
+        if (/^\d{5}(-\d{4})?$/.test(profile.location.city)) {
+          console.warn(`Detected zipcode format in city field: ${profile.location.city}`);
+          await fetchByZipcode(profile.location.city, profile.location.country || 'US');
+        } else {
+          await fetchByCity(profile.location.city);
+        }
       }
     } else {
       await fetchByCurrentLocation();
     }
-  }, [profile, fetchByLocation, fetchByCity, fetchByCurrentLocation]);
+  }, [profile?.location?.zipcode, profile?.location?.city, profile?.location?.latitude, profile?.location?.longitude]); // Only depend on actual location data
 
-  // Auto-fetch weather data when profile changes
+  // Auto-fetch weather data when profile changes - FIXED dependency array
   useEffect(() => {
     if (profile?.location && !state.data && !state.loading) {
-      refetch();
+      // Call refetch directly without including it in dependencies
+      if (profile.location.zipcode) {
+        fetchByZipcode(profile.location.zipcode, profile.location.country || 'US');
+      } else if (profile.location.latitude && profile.location.longitude) {
+        fetchByLocation(profile.location.latitude, profile.location.longitude);
+      } else if (profile.location.city) {
+        // Check if city might be a zipcode
+        if (/^\d{5}(-\d{4})?$/.test(profile.location.city)) {
+          fetchByZipcode(profile.location.city, profile.location.country || 'US');
+        } else {
+          fetchByCity(profile.location.city);
+        }
+      } else {
+        fetchByCurrentLocation();
+      }
     }
-  }, [profile, state.data, state.loading, refetch]);
+  }, [profile?.location?.zipcode, profile?.location?.city, profile?.location?.latitude, profile?.location?.longitude, state.data, state.loading]); // Stable dependencies
 
   return {
     ...state,
     refetch,
     fetchByLocation,
     fetchByCity,
+    fetchByZipcode,
     fetchByCurrentLocation,
   };
 }
@@ -125,18 +169,20 @@ export function useWeatherWithRefresh(profile?: UserProfile | null) {
   const weather = useWeather(profile);
   
   useEffect(() => {
-    // Only set up interval if we have data
+    let interval: NodeJS.Timeout | null = null;
+    
     if (weather.data) {
       // Refresh every 30 minutes
-      const interval = setInterval(() => {
+      interval = setInterval(() => {
         weather.refetch();
       }, 30 * 60 * 1000);
-
-      return () => clearInterval(interval);
     }
-    
-    // Always return a cleanup function, even if it's empty
-    return () => {};
+
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
   }, [weather.data, weather.refetch]);
 
   return weather;
