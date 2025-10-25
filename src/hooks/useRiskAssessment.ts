@@ -15,7 +15,33 @@ function getCurrentSeason(): 'spring' | 'summer' | 'fall' | 'winter' {
 
 // Helper function to create a stable dependency from array
 function createStableDependency(checkIns: DailyLog[]): string {
-  return checkIns.map(c => `${c.id}-${c.date.getTime()}`).join('|');
+  if (!checkIns || checkIns.length === 0) return '';
+  
+  try {
+    return checkIns
+      .filter(c => c && c.id && c.date)
+      .map(c => {
+        try {
+          let dateValue: number;
+          if (c.date instanceof Date) {
+            dateValue = c.date.getTime();
+          } else if (typeof c.date === 'string') {
+            dateValue = new Date(c.date).getTime();
+          } else if (c.date && typeof c.date === 'object' && 'seconds' in c.date) {
+            // Firestore Timestamp
+            dateValue = (c.date as any).seconds * 1000;
+          } else {
+            dateValue = Date.now();
+          }
+          return `${c.id}-${dateValue}`;
+        } catch {
+          return `${c.id}-${Date.now()}`;
+        }
+      })
+      .join('|');
+  } catch {
+    return '';
+  }
 }
 
 export interface EnhancedRiskAssessment {

@@ -102,80 +102,93 @@ export function LocationStep({ profile, updateProfile, onNext, onPrev }: Locatio
   };
 
   return (
-    <div className="space-y-6">
-      <CardHeader>
-        <CardTitle>Where are you located?</CardTitle>
-        <CardDescription>
-          Enter your zipcode for the most accurate weather data, or use your current location for city-based weather information.
-        </CardDescription>
-      </CardHeader>
+    <div className="space-y-5">
+      {/* Header - Compact */}
+      <div className="text-center">
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Where are you located?</h2>
+        <p className="text-sm text-gray-600">Enter your zipcode or use your current location</p>
+      </div>
 
-      <div className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="zipcode">Zipcode</Label>
+      {/* Location Input Grid - Compact 2-Column */}
+      <div className="grid grid-cols-3 gap-3">
+        <div className="col-span-2 space-y-1.5">
+          <Label htmlFor="zipcode" className="text-sm font-medium">Zipcode</Label>
           <Input
             id="zipcode"
             placeholder="e.g., 10001"
             value={zipcode}
             onChange={(e) => setZipcode(e.target.value)}
+            className="h-10"
           />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="country">Country Code</Label>
+        <div className="space-y-1.5">
+          <Label htmlFor="country" className="text-sm font-medium">Country</Label>
           <Input
             id="country"
-            placeholder="e.g., US"
+            placeholder="US"
             value={country}
-            onChange={(e) => setCountry(e.target.value)}
+            onChange={(e) => setCountry(e.target.value.toUpperCase())}
+            maxLength={2}
+            className="h-10 uppercase"
           />
-        </div>
-
-        <div className="text-center">
-          <p className="text-sm text-muted-foreground mb-3">Or use your current location:</p>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={getCurrentLocationHandler}
-            disabled={isLoading}
-            className="w-full"
-          >
-            {isLoading ? "Getting location..." : "Use Current Location"}
-          </Button>
-          
-          {detectedLocation && (
-            <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-              <p className="text-sm text-green-800">
-                <strong>✓ Location detected:</strong> {detectedLocation}
-              </p>
-              <p className="text-xs text-green-600 mt-1">
-                Weather data will be based on this location. You can still enter a zipcode above for more precision.
-              </p>
-            </div>
-          )}
-        </div>
-
-        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-          <p className="text-sm text-blue-800">
-            <strong>Privacy Note:</strong> Your zipcode is only used to fetch weather data. 
-            It&apos;s stored locally on your device and never shared.
-          </p>
-        </div>
-
-        <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-          <p className="text-sm text-yellow-800">
-            <strong>Why zipcode?</strong> Using your zipcode provides more accurate weather data 
-            than city names, since many cities have the same name across different regions.
-          </p>
         </div>
       </div>
 
-      <div className="flex justify-between pt-4">
-        <Button variant="outline" onClick={onPrev}>
-          Previous
+      {/* Divider with OR */}
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-gray-200"></div>
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-white px-3 text-gray-500 font-medium">Or</span>
+        </div>
+      </div>
+
+      {/* Current Location Button */}
+      <Button
+        type="button"
+        variant="outline"
+        onClick={getCurrentLocationHandler}
+        disabled={isLoading}
+        className="w-full h-11 text-sm font-medium border-2 hover:border-teal-500 hover:bg-teal-50 transition-colors"
+      >
+        {isLoading ? (
+          <>
+            <span className="animate-spin mr-2">⟳</span>
+            Getting location...
+          </>
+        ) : (
+          <>
+            <span className="mr-2">📍</span>
+            Use Current Location
+          </>
+        )}
+      </Button>
+      
+      {/* Detected Location Badge */}
+      {detectedLocation && (
+        <div className="p-3 bg-gradient-to-r from-green-50 to-teal-50 border border-green-200 rounded-lg">
+          <p className="text-sm text-green-800 font-medium">
+            ✓ Location: {detectedLocation}
+          </p>
+        </div>
+      )}
+
+      {/* Privacy Note - Minimal */}
+      <div className="bg-blue-50/50 p-3 rounded-lg border border-blue-100">
+        <p className="text-xs text-blue-700 text-center">
+          🔒 <strong>Private & Secure</strong> — Your location is stored locally and never shared
+        </p>
+      </div>
+
+      {/* Navigation Buttons */}
+      <div className="flex gap-3 pt-2">
+        <Button variant="outline" onClick={onPrev} className="flex-1 h-11">
+          ← Previous
         </Button>
-        <Button onClick={handleNext}>
-          Continue
+        <Button onClick={handleNext} disabled={isLoading} className="flex-1 h-11 bg-teal-600 hover:bg-teal-700">
+          Continue →
         </Button>
       </div>
     </div>

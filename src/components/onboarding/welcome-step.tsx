@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Check, Shield, AlertCircle } from "lucide-react";
 
 interface WelcomeStepProps {
   onNext: () => void;
@@ -7,42 +7,63 @@ interface WelcomeStepProps {
 
 export function WelcomeStep({ onNext }: WelcomeStepProps) {
   return (
-    <div className="text-center space-y-6">
-      <CardHeader>
-        <CardTitle className="text-2xl">Welcome to DermAIr!</CardTitle>
-        <CardDescription className="text-lg">
-          Your personalized skin-weather companion
-        </CardDescription>
-      </CardHeader>
+    <div className="space-y-6">
+      <div className="text-center">
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome to DermAIr!</h2>
+        <p className="text-gray-600">Your personalized skin-weather companion</p>
+      </div>
       
-      <div className="space-y-4">
-        <div className="bg-primary/5 p-4 rounded-lg border border-primary/20">
-          <h3 className="font-semibold text-primary mb-2">What we&apos;ll do together:</h3>
-          <ul className="text-sm space-y-1 text-left">
-            <li>• Set up your location for weather tracking</li>
-            <li>• Identify your personal skin triggers</li>
-            <li>• Customize your risk preferences</li>
-            <li>• Create your personalized profile</li>
-          </ul>
+      {/* What we'll do - Compact Grid */}
+      <div className="bg-gradient-to-br from-teal-50 to-blue-50 p-4 rounded-xl border border-teal-200">
+        <h3 className="font-semibold text-teal-900 mb-3 flex items-center gap-2">
+          <span className="text-lg">✨</span>
+          What we&apos;ll do together:
+        </h3>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="flex items-start gap-2">
+            <Check className="h-4 w-4 text-teal-600 mt-0.5 flex-shrink-0" />
+            <span className="text-sm text-gray-700">Set up location tracking</span>
+          </div>
+          <div className="flex items-start gap-2">
+            <Check className="h-4 w-4 text-teal-600 mt-0.5 flex-shrink-0" />
+            <span className="text-sm text-gray-700">Identify skin triggers</span>
+          </div>
+          <div className="flex items-start gap-2">
+            <Check className="h-4 w-4 text-teal-600 mt-0.5 flex-shrink-0" />
+            <span className="text-sm text-gray-700">Customize preferences</span>
+          </div>
+          <div className="flex items-start gap-2">
+            <Check className="h-4 w-4 text-teal-600 mt-0.5 flex-shrink-0" />
+            <span className="text-sm text-gray-700">Create your profile</span>
+          </div>
+        </div>
+      </div>
+      
+      {/* Important Notes - Horizontal Layout */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+          <div className="flex items-start gap-2">
+            <Shield className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="text-xs font-semibold text-blue-900 mb-1">Privacy First</p>
+              <p className="text-xs text-blue-700">Data stays on your device</p>
+            </div>
+          </div>
         </div>
         
-        <div className="bg-warning/10 p-4 rounded-lg border border-warning/20">
-          <p className="text-sm">
-            <strong>Privacy First:</strong> All your data stays on your device. 
-            We only use weather APIs - no personal data is shared.
-          </p>
-        </div>
-        
-        <div className="bg-red-50 p-4 rounded-lg border border-red-200">
-          <p className="text-sm text-red-800">
-            <strong>Medical Disclaimer:</strong> DermAIr provides general wellness insights only. 
-            Always consult healthcare professionals for medical advice, diagnosis, or treatment.
-          </p>
+        <div className="bg-red-50 p-3 rounded-lg border border-red-200">
+          <div className="flex items-start gap-2">
+            <AlertCircle className="h-4 w-4 text-red-600 mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="text-xs font-semibold text-red-900 mb-1">Medical Disclaimer</p>
+              <p className="text-xs text-red-700">Wellness insights only</p>
+            </div>
+          </div>
         </div>
       </div>
       
       <Button onClick={onNext} size="lg" className="w-full">
-        Let&apos;s Get Started
+        Let&apos;s Get Started →
       </Button>
     </div>
   );

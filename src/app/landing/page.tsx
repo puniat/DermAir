@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Loader2, TrendingUp, Cloud, ShieldCheck, Smartphone } from 'lucide-react';
+import { Logo } from '@/components/Logo';
 
 export default function LandingPage() {
   const router = useRouter();
@@ -61,38 +62,7 @@ export default function LandingPage() {
           {/* Header with Logo */}
           <div className="flex flex-col lg:flex-row items-center gap-8 mb-8">
             {/* Eye-catching Logo */}
-            <div className="flex-shrink-0">
-              <div className="relative">
-                {/* Animated background circles */}
-                <div className="absolute inset-0 bg-gradient-to-r from-teal-400 to-blue-500 rounded-3xl animate-pulse opacity-20 blur-xl"></div>
-                
-                {/* Main logo container */}
-                <div className="relative w-32 h-32 bg-gradient-to-br from-teal-500 via-teal-600 to-blue-600 rounded-3xl shadow-2xl flex items-center justify-center transform hover:scale-105 transition-transform duration-300">
-                  {/* Logo SVG - Skin care themed */}
-                  <svg className="w-20 h-20" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    {/* Shield shape representing protection */}
-                    <path d="M50 10 L80 25 L80 55 Q80 75, 50 90 Q20 75, 20 55 L20 25 Z" 
-                          fill="white" opacity="0.95"/>
-                    
-                    {/* Heart in the center representing health */}
-                    <path d="M50 42 Q50 35, 45 32 Q40 30, 37 33 Q35 35, 35 38 Q35 45, 50 55 Q65 45, 65 38 Q65 35, 63 33 Q60 30, 55 32 Q50 35, 50 42 Z" 
-                          fill="#14B8A6" className="animate-pulse"/>
-                    
-                    {/* Sun rays representing weather monitoring */}
-                    <circle cx="50" cy="42" r="3" fill="#0EA5E9" opacity="0.5"/>
-                    <line x1="50" y1="30" x2="50" y2="35" stroke="#0EA5E9" strokeWidth="2" opacity="0.6"/>
-                    <line x1="63" y1="35" x2="60" y2="38" stroke="#0EA5E9" strokeWidth="2" opacity="0.6"/>
-                    <line x1="37" y1="35" x2="40" y2="38" stroke="#0EA5E9" strokeWidth="2" opacity="0.6"/>
-                  </svg>
-                  
-                  {/* Small indicator dots */}
-                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white shadow-lg"></div>
-                </div>
-                
-                {/* Decorative elements */}
-                <div className="absolute -bottom-2 -right-2 w-16 h-16 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full opacity-20 blur-lg"></div>
-              </div>
-            </div>
+            <Logo size="md" />
 
             {/* Title and Description */}
             <div className="flex-1 text-center lg:text-left">

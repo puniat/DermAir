@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
+import { Logo } from '@/components/Logo';
 
 export default function HomePage() {
   const router = useRouter();
@@ -32,11 +33,9 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-50 via-white to-blue-50">
-      <div className="text-center">
-        <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-teal-500 to-teal-600 rounded-2xl mb-6 shadow-lg">
-          <span className="text-white font-bold text-2xl">D</span>
-        </div>
-        <Loader2 className="h-8 w-8 animate-spin text-teal-600 mx-auto mb-4" />
+      <div className="text-center flex flex-col items-center">
+        <Logo size="md" />
+        <Loader2 className="h-8 w-8 animate-spin text-teal-600 mx-auto mb-4 mt-6" />
         <p className="text-gray-600">Loading DermAIr...</p>
       </div>
     </div>

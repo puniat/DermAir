@@ -7,6 +7,7 @@ import { Label } from './ui/label'
 import { RefreshCw, Brain, Settings } from 'lucide-react'
 import { HelpDialog } from './ui/help-dialog'
 import { useAIModeStore } from '@/lib/stores/ai-mode'
+import { Logo } from './Logo'
 import type { UserProfile } from '@/types'
 
 interface HeaderProps {
@@ -39,9 +40,7 @@ export function Header({
           {/* Left Side - Brand */}
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-teal-500 to-teal-600 rounded-xl flex items-center justify-center shadow-sm">
-                <span className="text-white font-bold text-lg">D</span>
-              </div>
+              <Logo size="sm" />
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">DermAIr Health Dashboard</h1>
                 <p className="text-sm text-gray-600">Medical-grade risk assessment with personalized recommendations</p>
@@ -88,18 +87,17 @@ export function Header({
                 </Button>
               )}
               
-              {/* AI Mode Toggle */}
-              <div className="flex items-center gap-2 px-3 py-1 bg-gray-50 rounded-lg">
+              {/* AI Mode Toggle - Hidden, always enabled */}
+              {/* <div className="flex items-center gap-2 px-3 py-1 bg-gray-50 rounded-lg">
                 <Switch
                   id="ai-mode-toggle"
                   checked={isAIModeEnabled}
                   onCheckedChange={toggleAIMode}
-                  
                 />
                 <Label htmlFor="ai-mode-toggle" className="text-sm text-gray-700 cursor-pointer">
                   AI Mode
                 </Label>
-              </div>
+              </div> */}
               
               <HelpDialog />
               

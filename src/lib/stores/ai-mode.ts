@@ -11,7 +11,7 @@ interface AIModeStore {
 export const useAIModeStore = create<AIModeStore>()(
   persist(
     (set) => ({
-      isAIModeEnabled: false,
+      isAIModeEnabled: true, // AI Mode enabled by default
       toggleAIMode: () => set((state) => ({ isAIModeEnabled: !state.isAIModeEnabled })),
       enableAIMode: () => set({ isAIModeEnabled: true }),
       disableAIMode: () => set({ isAIModeEnabled: false }),

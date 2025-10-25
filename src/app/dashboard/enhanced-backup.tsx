@@ -32,8 +32,7 @@ import {
   Bell,
   Download,
   Upload,
-  User,
-  Lightbulb
+  User
 } from "lucide-react";
 import { Header } from "@/components/Header";
 
@@ -82,6 +81,13 @@ export default function EnhancedDashboardPage() {
       setLoading(false);
     }
   }, [session, sessionLoading, router]);
+
+  // Navigate to regular dashboard when AI mode is disabled
+  useEffect(() => {
+    if (!isAIModeEnabled && !loading) {
+      router.push("/dashboard");
+    }
+  }, [isAIModeEnabled, loading, router]);
 
   // Handlers
   const handleCheckInSubmit = async (data: DailyCheckInFormData) => {
@@ -184,137 +190,86 @@ export default function EnhancedDashboardPage() {
         onShowCheckIn={() => setShowCheckIn(true)}
         hasTodaysCheckIn={false} // TODO: implement this check if needed
       />
-      <div className="container mx-auto p-6 space-y-4">
+      <div className="container mx-auto p-6 space-y-6">
         <Toaster />
 
-      {/* Ultra Compact Status Bar - All in One Row */}
-      <Card className="border-l-4 border-l-teal-500 shadow-md">
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between gap-6">
-            {/* AI Status - Compact */}
-            <div className="flex items-center gap-3">
-              <div className={`p-2 rounded-lg ${useAdvancedAI ? 'bg-green-100' : 'bg-gray-100'}`}>
-                <Brain className={`h-5 w-5 ${useAdvancedAI ? 'text-green-600' : 'text-gray-400'}`} />
-              </div>
-              <div>
-                <p className="text-xs text-gray-600 font-medium">AI Status</p>
-                <p className="text-base font-bold">
-                  {useAdvancedAI ? 'Active' : 'Basic'}
-                  <span className="text-xs font-normal text-muted-foreground ml-1">
-                    {useAdvancedAI && `${(riskAssessment.confidence * 100).toFixed(0)}%`}
-                  </span>
-                </p>
-              </div>
+      {/* Status Cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {/* AI Status */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">AI Status</CardTitle>
+            <Brain className={`h-4 w-4 ${useAdvancedAI ? 'text-green-600' : 'text-gray-400'}`} />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {useAdvancedAI ? 'Active' : 'Basic'}
             </div>
-
-            <div className="h-10 w-px bg-gray-200"></div>
-
-            {/* Risk Level - Compact */}
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-orange-100">
-                <Target className="h-5 w-5 text-orange-600" />
-              </div>
-              <div>
-                <p className="text-xs text-gray-600 font-medium">Risk Level</p>
-                <p className="text-base font-bold uppercase">
-                  {riskAssessment.riskLevel}
-                  <span className="text-xs font-normal text-muted-foreground ml-1">
-                    {riskAssessment.riskScore.toFixed(1)}/10
-                  </span>
-                </p>
-              </div>
-            </div>
-
-            <div className="h-10 w-px bg-gray-200"></div>
-
-            {/* AI Recommendations - Compact */}
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-yellow-100">
-                <Zap className="h-5 w-5 text-yellow-600" />
-              </div>
-              <div>
-                <p className="text-xs text-gray-600 font-medium">AI Recommendations</p>
-                <p className="text-base font-bold">
-                  {riskAssessment.aiRecommendations.length}
-                  <span className="text-xs font-normal text-muted-foreground ml-1">
-                    Personalized actions
-                  </span>
-                </p>
-              </div>
-            </div>
-
-            <div className="h-10 w-px bg-gray-200"></div>
-
-            {/* Data Points - Compact */}
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-blue-100">
-                <TrendingUp className="h-5 w-5 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-xs text-gray-600 font-medium">Data Points</p>
-                <p className="text-base font-bold">
-                  {checkIns.length}
-                  <span className="text-xs font-normal text-muted-foreground ml-1">
-                    Symptom logs
-                  </span>
-                </p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Quick Recommendations - Inline Horizontal Layout */}
-      {riskAssessment.recommendations.length > 0 && (
-        <Card className="border-l-4 border-l-teal-500 shadow-md">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-4">
-              {/* Section Title */}
-              <div className="flex items-center gap-2 flex-shrink-0">
-                <Lightbulb className="h-5 w-5 text-teal-600" />
-                <div>
-                  <p className="text-sm font-bold text-gray-900">Quick Recommendations</p>
-                  <p className="text-xs text-gray-600">Based on {riskAssessment.riskLevel} risk</p>
-                </div>
-              </div>
-
-              <div className="h-10 w-px bg-gray-200 flex-shrink-0"></div>
-
-              {/* Recommendations - Horizontal Scroll */}
-              <div className="flex-1 overflow-x-auto">
-                <div className="flex gap-3">
-                  {riskAssessment.recommendations.slice(0, 4).map((rec, index) => (
-                    <div 
-                      key={index} 
-                      className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-teal-50 to-blue-50 border border-teal-200 whitespace-nowrap flex-shrink-0"
-                    >
-                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-teal-600 text-white flex items-center justify-center text-xs font-bold">
-                        {index + 1}
-                      </div>
-                      <p className="text-xs font-medium text-gray-700">{rec}</p>
-                    </div>
-                  ))}
-                  {riskAssessment.recommendations.length > 4 && (
-                    <button
-                      onClick={() => setActiveTab('dashboard')}
-                      className="flex items-center gap-1 px-3 py-2 rounded-lg border-2 border-dashed border-teal-300 text-teal-600 hover:bg-teal-50 transition-colors flex-shrink-0"
-                    >
-                      <span className="text-xs font-medium">+{riskAssessment.recommendations.length - 4} more</span>
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
+            <p className="text-xs text-muted-foreground">
+              {useAdvancedAI 
+                ? `${(riskAssessment.confidence * 100).toFixed(1)}% confidence`
+                : 'Standard mode'
+              }
+            </p>
           </CardContent>
         </Card>
-      )}
+
+        {/* Current Risk */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Risk Level</CardTitle>
+            <Target className="h-4 w-4 text-orange-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {riskAssessment.riskLevel.toUpperCase()}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Score: {riskAssessment.riskScore.toFixed(1)}/10
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Active Recommendations */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">AI Recommendations</CardTitle>
+            <Zap className="h-4 w-4 text-yellow-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {riskAssessment.aiRecommendations.length}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Personalized actions
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Data Points */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Data Points</CardTitle>
+            <TrendingUp className="h-4 w-4 text-blue-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {checkIns.length}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Symptom logs collected
+            </p>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Main Content */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="dashboard">AI Dashboard</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
           <TabsTrigger value="insights">Insights</TabsTrigger>
+          <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
 
         <TabsContent value="dashboard" className="space-y-6">
