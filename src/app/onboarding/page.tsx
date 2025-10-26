@@ -65,11 +65,15 @@ export default function OnboardingPage() {
   const [riskThreshold, setRiskThreshold] = useState<"low" | "moderate" | "high">("moderate");
 
   const getCurrentLocationHandler = async () => {
+    console.log('[Onboarding] Getting current location...');
     setIsLoadingLocation(true);
     try {
       const location = await getCurrentLocation();
+      console.log('[Onboarding] Got coordinates:', location);
+      
       const { latitude, longitude } = location;
       const locationInfo = await reverseGeocode(latitude, longitude);
+      console.log('[Onboarding] Reverse geocode result:', locationInfo);
       
       setZipcode("");
       setCountry(locationInfo.country);
@@ -81,9 +85,11 @@ export default function OnboardingPage() {
         longitude,
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
       });
+      console.log('[Onboarding] Location data set successfully');
     } catch (error) {
-      console.error("Error getting location:", error);
-      alert("Could not get your location. Please enter your zipcode manually.");
+      console.error("[Onboarding] Error getting location:", error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      alert(`Could not get your location: ${errorMessage}\n\nPlease enter your zipcode manually.`);
     } finally {
       setIsLoadingLocation(false);
     }

@@ -242,20 +242,32 @@ export async function fetchWeatherByCity(city: string): Promise<WeatherData> {
  * Get user's current location using browser geolocation
  */
 export async function getCurrentLocation(): Promise<{ latitude: number; longitude: number }> {
+  console.log('[getCurrentLocation] Starting geolocation request...');
+  
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) {
+      console.error('[getCurrentLocation] Geolocation not supported');
       reject(new Error("Geolocation is not supported by this browser"));
       return;
     }
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
+        console.log('[getCurrentLocation] Success:', {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          accuracy: position.coords.accuracy
+        });
         resolve({
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
         });
       },
       (error) => {
+        console.error('[getCurrentLocation] Error:', {
+          code: error.code,
+          message: error.message
+        });
         reject(new Error(`Geolocation error: ${error.message}`));
       },
       {
@@ -486,35 +498,54 @@ export async function reverseGeocode(
   latitude: number,
   longitude: number
 ): Promise<{ city: string; country: string }> {
+  console.log('[reverseGeocode] Input:', { latitude, longitude });
+  
   if (!OPENWEATHER_API_KEY) {
-    console.warn("OpenWeatherMap API key not configured for reverse geocoding");
+    console.error("[reverseGeocode] API key not configured");
     return { city: "Unknown Location", country: "Unknown" };
   }
 
+  const url = `https://api.openweathermap.org/geo/1.0/reverse?lat=${latitude}&lon=${longitude}&limit=1&appid=${OPENWEATHER_API_KEY}`;
+  console.log('[reverseGeocode] Request URL:', url.replace(OPENWEATHER_API_KEY, 'HIDDEN'));
+
   try {
-    const response = await fetch(
-      `https://api.openweathermap.org/geo/1.0/reverse?lat=${latitude}&lon=${longitude}&limit=1&appid=${OPENWEATHER_API_KEY}`
-    );
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+      },
+    });
+
+    console.log('[reverseGeocode] Response status:', response.status);
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error('[reverseGeocode] Error response:', errorText);
+      
       if (response.status === 401) {
         console.error("OpenWeatherMap API key is invalid for reverse geocoding");
         return { city: "Unknown Location", country: "Unknown" };
       }
-      throw new Error(`Reverse geocoding error: ${response.status}`);
+      throw new Error(`Reverse geocoding error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
+    console.log('[reverseGeocode] API Response:', data);
+    
     if (!data.length) {
+      console.error('[reverseGeocode] No location data returned');
       throw new Error("Location not found");
     }
 
-    return {
+    const result = {
       city: data[0].name || "Unknown Location",
       country: data[0].country || "Unknown",
     };
+    console.log('[reverseGeocode] Success:', result);
+    
+    return result;
   } catch (error) {
-    console.error("Error in reverse geocoding:", error);
+    console.error("[reverseGeocode] Exception:", error);
     return { city: "Unknown Location", country: "Unknown" };
   }
 }
