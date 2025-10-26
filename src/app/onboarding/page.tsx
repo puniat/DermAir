@@ -161,15 +161,15 @@ export default function OnboardingPage() {
     <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-blue-50">
       {/* Compact Header - No extra space */}
       <div className="bg-white/80 backdrop-blur-sm border-b">
-        <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Logo size="sm" />
             <div>
-              <h1 className="text-lg font-bold text-gray-900">DermAIr Setup</h1>
+              <h1 className="text-base sm:text-lg font-bold text-gray-900">DermAIr Setup</h1>
               <p className="text-xs text-gray-600">2-minute personalization</p>
             </div>
           </div>
-          <div className="flex items-center gap-2 text-xs text-gray-600">
+          <div className="hidden sm:flex items-center gap-2 text-xs text-gray-600">
             <Heart className="h-4 w-4 text-teal-600" />
             <span>Secure & Private</span>
           </div>
@@ -177,17 +177,17 @@ export default function OnboardingPage() {
       </div>
 
       {/* Main Content - Full Screen Usage */}
-      <div className="max-w-7xl mx-auto px-6 py-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
         <Card className="shadow-xl border-0">
-          <CardContent className="p-8">
-            <div className="grid grid-cols-2 gap-8">
+          <CardContent className="p-4 sm:p-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
               {/* LEFT COLUMN - Location & Triggers */}
               <div className="space-y-6">
                 {/* Location Section */}
                 <div>
                   <div className="flex items-center gap-2 mb-3">
                     <MapPin className="h-5 w-5 text-teal-600" />
-                    <h2 className="text-lg font-bold text-gray-900">Your Location</h2>
+                    <h2 className="text-base sm:text-lg font-bold text-gray-900">Your Location</h2>
                   </div>
                   
                   <div className="space-y-3">
@@ -243,10 +243,10 @@ export default function OnboardingPage() {
                 <div>
                   <div className="flex items-center gap-2 mb-3">
                     <Zap className="h-5 w-5 text-teal-600" />
-                    <h2 className="text-lg font-bold text-gray-900">Your Triggers</h2>
+                    <h2 className="text-base sm:text-lg font-bold text-gray-900">Your Triggers</h2>
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-2 mb-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
                     {COMMON_TRIGGERS.map((trigger) => (
                       <div 
                         key={trigger}
