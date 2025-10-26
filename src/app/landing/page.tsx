@@ -17,6 +17,12 @@ export default function LandingPage() {
     // Check if user already has a profile in localStorage or Firestore
     const checkExistingProfile = async () => {
       try {
+        // Check if we're in browser environment
+        if (typeof window === 'undefined') {
+          setIsInitializing(false);
+          return;
+        }
+        
         const localProfile = localStorage.getItem('dermair-profile');
         if (localProfile) {
           router.push('/dashboard');

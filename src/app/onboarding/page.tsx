@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -36,6 +36,17 @@ const RISK_THRESHOLDS = [
 export default function OnboardingPage() {
   const router = useRouter();
   const { session, updateProfile: updateSessionProfile } = useUserSession();
+  
+  // Debug: Check environment on mount
+  useEffect(() => {
+    console.log('[Onboarding] Component mounted');
+    console.log('[Onboarding] Environment check:', {
+      hasApiKey: !!process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY,
+      apiKeyLength: process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY?.length || 0,
+      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'SSR',
+      platform: typeof navigator !== 'undefined' ? navigator.platform : 'SSR'
+    });
+  }, []);
   
   // Location
   const [zipcode, setZipcode] = useState("");
@@ -111,7 +122,10 @@ export default function OnboardingPage() {
       if (!finalLocationData && zipcode.trim()) {
         setIsLoadingLocation(true);
         try {
+          console.log('[Onboarding] Validating zipcode:', zipcode.trim(), country);
           const locationInfo = await getLocationByZipcode(zipcode.trim(), country);
+          console.log('[Onboarding] Zipcode validation success:', locationInfo);
+          
           finalLocationData = {
             city: locationInfo.name,
             country: locationInfo.country,
@@ -121,7 +135,22 @@ export default function OnboardingPage() {
             timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
           };
         } catch (error) {
-          alert("Invalid zipcode. Please check and try again.");
+          console.error('[Onboarding] Zipcode validation error:', error);
+          
+          // Show specific error message
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          if (errorMessage.includes('not configured')) {
+            alert("Weather API is not configured. Please contact support.");
+          } else if (errorMessage.includes('Invalid zipcode')) {
+            alert(`Invalid zipcode: ${zipcode.trim()}. Please check and try again.`);
+          } else if (errorMessage.includes('401') || errorMessage.includes('unauthorized')) {
+            alert("Weather API authentication failed. Please contact support.");
+          } else if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
+            alert("Network error. Please check your connection and try again.");
+          } else {
+            alert(`Error validating zipcode: ${errorMessage}`);
+          }
+          
           setIsLoadingLocation(false);
           return;
         } finally {

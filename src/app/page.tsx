@@ -12,6 +12,12 @@ export default function HomePage() {
     // Check for existing profile
     const checkProfile = () => {
       try {
+        // Check if we're in browser environment
+        if (typeof window === 'undefined') {
+          router.replace('/landing');
+          return;
+        }
+        
         const profile = localStorage.getItem('dermair-profile');
         
         if (profile) {

@@ -430,28 +430,53 @@ export async function getLocationByZipcode(zipcode: string, countryCode: string 
   lat: number;
   lon: number;
 }> {
+  // Log input parameters for debugging
+  console.log('[getLocationByZipcode] Input:', { zipcode, countryCode });
+  
   if (!OPENWEATHER_API_KEY) {
+    console.error('[getLocationByZipcode] API key not configured');
     throw new Error("OpenWeatherMap API key not configured");
   }
 
-  const response = await fetch(
-    `${GEO_URL}/zip?zip=${zipcode},${countryCode}&appid=${OPENWEATHER_API_KEY}`
-  );
+  const url = `${GEO_URL}/zip?zip=${zipcode},${countryCode}&appid=${OPENWEATHER_API_KEY}`;
+  console.log('[getLocationByZipcode] Request URL:', url.replace(OPENWEATHER_API_KEY, 'HIDDEN'));
 
-  if (!response.ok) {
-    if (response.status === 404) {
-      throw new Error(`Invalid zipcode: ${zipcode}`);
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+      },
+    });
+
+    console.log('[getLocationByZipcode] Response status:', response.status);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('[getLocationByZipcode] Error response:', errorText);
+      
+      if (response.status === 404) {
+        throw new Error(`Invalid zipcode: ${zipcode}`);
+      }
+      if (response.status === 401) {
+        throw new Error('API key invalid or unauthorized');
+      }
+      throw new Error(`Geocoding API error: ${response.status} - ${errorText}`);
     }
-    throw new Error(`Geocoding API error: ${response.status}`);
-  }
 
-  const data: GeocodingResponse = await response.json();
-  return {
-    name: data.name,
-    country: data.country,
-    lat: data.lat,
-    lon: data.lon
-  };
+    const data: GeocodingResponse = await response.json();
+    console.log('[getLocationByZipcode] Success:', { name: data.name, country: data.country });
+    
+    return {
+      name: data.name,
+      country: data.country,
+      lat: data.lat,
+      lon: data.lon
+    };
+  } catch (error) {
+    console.error('[getLocationByZipcode] Exception:', error);
+    throw error;
+  }
 }
 
 /**

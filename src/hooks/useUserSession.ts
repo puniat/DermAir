@@ -27,6 +27,12 @@ export function useUserSession() {
     try {
       setLoading(true);
       
+      // Check if we're in browser environment
+      if (typeof window === 'undefined') {
+        setLoading(false);
+        return;
+      }
+      
       // Check for existing user session
       const existingSession = localStorage.getItem("dermair-user-session");
       const existingProfile = localStorage.getItem("dermair-profile");
@@ -85,6 +91,9 @@ export function useUserSession() {
     if (!session) return;
 
     try {
+      // Check if we're in browser environment
+      if (typeof window === 'undefined') return;
+      
       // Update profile in localStorage
       localStorage.setItem("dermair-profile", JSON.stringify(profile));
       
