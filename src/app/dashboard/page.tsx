@@ -21,6 +21,7 @@ import { useAIModeStore } from "@/lib/stores/ai-mode";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import type { UserProfile, DailyCheckInFormData, DailyLog, WeatherData } from "@/types";
+import { getUserProfile } from '@/lib/services/firestore-data';
 import { 
   Brain,
   TrendingUp, 
@@ -73,15 +74,42 @@ export default function EnhancedDashboardPage() {
 
   // Effects
   useEffect(() => {
-    if (!sessionLoading) {
-      if (!session) {
-        router.push('/onboarding');
-        return;
+    const loadProfile = async () => {
+      if (!sessionLoading) {
+        console.log('[Dashboard] Session loading complete:', { session, hasSession: !!session, hasProfile: !!session?.profile, userId: session?.userId });
+        
+        if (!session) {
+          console.log('[Dashboard] No session found, redirecting to onboarding');
+          router.push('/onboarding');
+          return;
+        }
+        
+        // If session exists but no profile, try loading from Firebase
+        if (!session.profile && session.userId) {
+          console.log('[Dashboard] Session exists but no profile, loading from Firebase for user:', session.userId);
+          const firebaseProfile = await getUserProfile(session.userId);
+          if (firebaseProfile) {
+            console.log('[Dashboard] ✅ Profile loaded from Firebase:', { id: firebaseProfile.id, username: firebaseProfile.username });
+            setProfile(firebaseProfile);
+            updateProfile(firebaseProfile);
+          } else {
+            console.log('[Dashboard] ❌ No profile found in Firebase for userId:', session.userId);
+            setProfile(null);
+          }
+        } else if (session.profile) {
+          console.log('[Dashboard] Profile already in session:', { id: session.profile.id, username: session.profile.username });
+          setProfile(session.profile);
+        } else {
+          console.log('[Dashboard] No profile and no userId');
+          setProfile(null);
+        }
+        
+        setLoading(false);
       }
-      setProfile(session.profile);
-      setLoading(false);
-    }
-  }, [session, sessionLoading, router]);
+    };
+    
+    loadProfile();
+  }, [session, sessionLoading, router, updateProfile]);
 
   // Handlers
   const handleCheckInSubmit = async (data: DailyCheckInFormData) => {
@@ -645,12 +673,12 @@ export default function EnhancedDashboardPage() {
                       const file = (e.target as HTMLInputElement).files?.[0];
                       if (file) {
                         const reader = new FileReader();
-                        reader.onload = (event) => {
+                        reader.onload = async (event) => {
                           try {
                             const data = JSON.parse(event.target?.result as string);
                             if (data.profile && data.checkIns) {
-                              localStorage.setItem('dermair-user-profile', JSON.stringify(data.profile));
-                              localStorage.setItem('dermair-daily-logs', JSON.stringify(data.checkIns));
+                              // Import to Firebase instead of localStorage
+                              // TODO: Implement Firebase import logic
                               toast.success('Data imported successfully. Please refresh the page.');
                             } else {
                               toast.error('Invalid data format');

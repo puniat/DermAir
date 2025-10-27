@@ -1,60 +1,22 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Loader2, TrendingUp, Cloud, ShieldCheck, Smartphone } from 'lucide-react';
+import { TrendingUp, Cloud, ShieldCheck, Smartphone } from 'lucide-react';
 import { Logo } from '@/components/Logo';
 
 export default function LandingPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [isInitializing, setIsInitializing] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    // Check if user already has a profile in localStorage or Firestore
-    const checkExistingProfile = async () => {
-      try {
-        // Check if we're in browser environment
-        if (typeof window === 'undefined') {
-          setIsInitializing(false);
-          return;
-        }
-        
-        const localProfile = localStorage.getItem('dermair-profile');
-        if (localProfile) {
-          router.push('/dashboard');
-          return;
-        }
-        // Optionally: Try to load a default profile from Firestore (for demo)
-        // If you want to support demo logins, you can add logic here
-      } catch (err) {
-        console.error('Error checking profile:', err);
-      } finally {
-        setIsInitializing(false);
-      }
-    };
-
-    checkExistingProfile();
-  }, [router]);
-
   const handleContinueLocal = () => {
-    // Go to onboarding without Google sync
+    // Go to onboarding
+    setIsLoading(true);
     router.push('/onboarding');
   };
-
-  if (isInitializing) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-blue-50 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin text-teal-600 mx-auto mb-4" />
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-blue-50">

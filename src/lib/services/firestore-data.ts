@@ -8,6 +8,7 @@ import {
   addDoc,
   getDocs,
   query,
+  where,
   orderBy,
   limit,
   Timestamp,
@@ -19,7 +20,119 @@ function isFirestoreTimestamp(val: any): val is Timestamp {
   return val && typeof val === 'object' && typeof val.toDate === 'function';
 }
 
+// --- Username Management ---
+export async function checkUsernameExists(username: string): Promise<boolean> {
+  try {
+    const profilesRef = collection(db, 'profiles');
+    const q = query(profilesRef, where('username', '==', username.toLowerCase()));
+    const snapshot = await getDocs(q);
+    
+    console.log(`🔍 Checking username "${username}":`, snapshot.empty ? 'Available' : 'Taken');
+    return !snapshot.empty;
+  } catch (error: any) {
+    console.error('❌ Error checking username:', error);
+    return false;
+  }
+}
+
+export async function checkEmailExists(email: string): Promise<boolean> {
+  try {
+    const profilesRef = collection(db, 'profiles');
+    const q = query(profilesRef, where('email', '==', email.toLowerCase()));
+    const snapshot = await getDocs(q);
+    
+    console.log(`🔍 Checking email "${email}":`, snapshot.empty ? 'Available' : 'Taken');
+    return !snapshot.empty;
+  } catch (error: any) {
+    console.error('❌ Error checking email:', error);
+    return false;
+  }
+}
+
+export async function getUserByUsername(username: string): Promise<UserProfile | null> {
+  try {
+    const profilesRef = collection(db, 'profiles');
+    const q = query(profilesRef, where('username', '==', username.toLowerCase()));
+    const snapshot = await getDocs(q);
+    
+    if (snapshot.empty) {
+      console.log('❌ User not found with username:', username);
+      return null;
+    }
+    
+    const data = snapshot.docs[0].data();
+    console.log('✅ User found with username:', username);
+    
+    // Convert Firestore data back to UserProfile type
+    const profile: UserProfile = {
+      id: data.id,
+      username: data.username || '',
+      email: data.email || '',
+      age_range: data.age_range,
+      skin_type: data.skin_type,
+      location: data.location,
+      known_triggers: data.known_triggers || [],
+      triggers: data.triggers || [],
+      severityHistory: (data.severityHistory || []).map((entry: any) => ({
+        severity: entry.severity,
+        date: isFirestoreTimestamp(entry.date) ? entry.date.toDate() : new Date(entry.date)
+      })),
+      preferences: data.preferences || { notifications: true, riskThreshold: 'moderate' },
+      research_opt_in: data.research_opt_in || false,
+      created_at: isFirestoreTimestamp(data.created_at) ? data.created_at.toDate() : new Date(data.created_at),
+    };
+    
+    return profile;
+  } catch (error: any) {
+    console.error('❌ Error getting user by username:', error);
+    return null;
+  }
+}
+
 // --- User Profile ---
+export async function getUserProfile(userId: string): Promise<UserProfile | null> {
+  try {
+    const ref = doc(db, 'profiles', userId);
+    const snapshot = await getDoc(ref);
+    
+    if (!snapshot.exists()) {
+      console.log('❌ Profile not found for user:', userId);
+      return null;
+    }
+    
+    const data = snapshot.data();
+    console.log('✅ Profile loaded from Firestore:', userId);
+    
+    // Convert Firestore data back to UserProfile type
+    const profile: UserProfile = {
+      id: data.id,
+      username: data.username || '',
+      email: data.email || '',
+      age_range: data.age_range,
+      skin_type: data.skin_type,
+      location: data.location,
+      known_triggers: data.known_triggers || [],
+      triggers: data.triggers || [],
+      severityHistory: (data.severityHistory || []).map((entry: any) => ({
+        severity: entry.severity,
+        date: isFirestoreTimestamp(entry.date) ? entry.date.toDate() : new Date(entry.date)
+      })),
+      preferences: data.preferences || { notifications: true, riskThreshold: 'moderate' },
+      research_opt_in: data.research_opt_in || false,
+      created_at: isFirestoreTimestamp(data.created_at) ? data.created_at.toDate() : new Date(data.created_at),
+    };
+    
+    return profile;
+  } catch (error: any) {
+    console.error('❌ Error loading profile from Firestore:', {
+      userId,
+      message: error.message,
+      code: error.code
+    });
+    return null;
+  }
+}
+
 export async function saveUserProfile(profile: UserProfile) {
   const ref = doc(db, 'profiles', profile.id);
   
@@ -33,7 +146,8 @@ export async function saveUserProfile(profile: UserProfile) {
 
   const data: Record<string, any> = {
     id: profile.id,
-    email: profile.email || '',
+    username: (profile.username || '').toLowerCase(), // Store username in lowercase for consistency
+    email: profile.email ? profile.email.toLowerCase() : null, // Store email in lowercase, null if not provided
     known_triggers: profile.known_triggers || [],
     triggers: profile.triggers || [],
     severityHistory,

@@ -5,10 +5,10 @@ import type { UserProfile } from "@/types";
 
 export interface UserSession {
   userId: string;
+  username: string;
   profile: UserProfile | null;
   isNewUser: boolean;
   lastActive: string;
-  sessionId: string;
 }
 
 export function useUserSession() {
@@ -19,67 +19,55 @@ export function useUserSession() {
     return `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   };
 
-  const generateSessionId = (): string => {
-    return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  };
-
-  const initializeSession = () => {
+  const initializeSession = (username?: string, existingUserId?: string) => {
     try {
       setLoading(true);
       
       // Check if we're in browser environment
       if (typeof window === 'undefined') {
+        console.log('[useUserSession] SSR environment, skipping initialization');
         setLoading(false);
         return;
       }
       
-      // Check for existing user session
-      const existingSession = localStorage.getItem("dermair-user-session");
-      const existingProfile = localStorage.getItem("dermair-profile");
+      // Try to get stored userId from localStorage
+      const storedUserId = existingUserId || localStorage.getItem('dermair_userId');
+      const userId = storedUserId || generateUserId();
       
-      if (existingSession) {
-        // Existing user returning
-        const parsedSession = JSON.parse(existingSession);
-        const profile = existingProfile ? JSON.parse(existingProfile) : null;
-        
-        const updatedSession: UserSession = {
-          ...parsedSession,
-          profile,
-          lastActive: new Date().toISOString(),
-          sessionId: generateSessionId(), // New session ID for this browser session
-          isNewUser: false
-        };
-        
-        // Update session in localStorage
-        localStorage.setItem("dermair-user-session", JSON.stringify(updatedSession));
-        setSession(updatedSession);
-        
-        console.log(`👋 Welcome back! User ID: ${updatedSession.userId}`);
+      console.log('[useUserSession] Initializing session:', { 
+        storedUserId: !!storedUserId, 
+        userId, 
+        username,
+        existingUserId 
+      });
+      
+      // Store userId in localStorage for persistence
+      if (!storedUserId) {
+        localStorage.setItem('dermair_userId', userId);
+        console.log('[useUserSession] Stored new userId in localStorage:', userId);
       } else {
-        // New user
-        const newUserId = generateUserId();
-        const newSession: UserSession = {
-          userId: newUserId,
-          profile: null,
-          isNewUser: true,
-          lastActive: new Date().toISOString(),
-          sessionId: generateSessionId()
-        };
-        
-        localStorage.setItem("dermair-user-session", JSON.stringify(newSession));
-        setSession(newSession);
-        
-        console.log(`🆕 New user created! User ID: ${newUserId}`);
+        console.log('[useUserSession] Using existing userId from localStorage:', userId);
       }
+      
+      const newSession: UserSession = {
+        userId,
+        username: username || '',
+        profile: null,
+        isNewUser: !storedUserId,
+        lastActive: new Date().toISOString(),
+      };
+      
+      setSession(newSession);
+      console.log(`${storedUserId ? '👋 Welcome back' : '🆕 New user'}! User ID: ${userId}, Username: ${username || 'not set'}`);
     } catch (error) {
       console.error("Failed to initialize user session:", error);
       // Create fallback session
       const fallbackSession: UserSession = {
         userId: generateUserId(),
+        username: username || '',
         profile: null,
         isNewUser: true,
         lastActive: new Date().toISOString(),
-        sessionId: generateSessionId()
       };
       setSession(fallbackSession);
     } finally {
@@ -91,13 +79,7 @@ export function useUserSession() {
     if (!session) return;
 
     try {
-      // Check if we're in browser environment
-      if (typeof window === 'undefined') return;
-      
-      // Update profile in localStorage
-      localStorage.setItem("dermair-profile", JSON.stringify(profile));
-      
-      // Update session
+      // Update session with profile
       const updatedSession: UserSession = {
         ...session,
         profile,
@@ -105,9 +87,7 @@ export function useUserSession() {
         lastActive: new Date().toISOString()
       };
       
-      localStorage.setItem("dermair-user-session", JSON.stringify(updatedSession));
       setSession(updatedSession);
-      
       console.log(`✅ Profile updated for user ${session.userId}`);
     } catch (error) {
       console.error("Failed to update profile:", error);
@@ -116,42 +96,14 @@ export function useUserSession() {
 
   const clearSession = () => {
     try {
-      localStorage.removeItem("dermair-user-session");
-      localStorage.removeItem("dermair-profile");
-      localStorage.removeItem("dermair-checkins");
-      localStorage.removeItem("dermair-notifications");
-      localStorage.removeItem("dermair-training-data");
-      localStorage.removeItem("dermair-training-data-timestamp");
-      
+      setSession(null);
+      // Clear userId from localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('dermair_userId');
+      }
       console.log("🗑️ User session cleared");
-      
-      // Create new session
-      initializeSession();
     } catch (error) {
       console.error("Failed to clear session:", error);
-    }
-  };
-
-  const getUserDataSummary = () => {
-    if (!session) return null;
-
-    try {
-      const checkIns = localStorage.getItem("dermair-checkins");
-      const notifications = localStorage.getItem("dermair-notifications");
-      const trainingData = localStorage.getItem("dermair-training-data");
-      
-      return {
-        userId: session.userId,
-        hasProfile: !!session.profile,
-        checkInsCount: checkIns ? JSON.parse(checkIns).length : 0,
-        hasNotifications: !!notifications,
-        hasTrainingData: !!trainingData,
-        lastActive: session.lastActive,
-        sessionId: session.sessionId
-      };
-    } catch (error) {
-      console.error("Failed to get user data summary:", error);
-      return null;
     }
   };
 
@@ -164,7 +116,7 @@ export function useUserSession() {
     loading,
     updateProfile,
     clearSession,
-    getUserDataSummary,
+    initializeSession,
     refresh: initializeSession
   };
 }

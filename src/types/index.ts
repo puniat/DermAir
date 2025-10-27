@@ -1,6 +1,7 @@
 // User Profile Types
 export interface UserProfile {
   id: string;
+  username?: string;
   email?: string;
   age_range?: "18-25" | "26-35" | "36-45" | "46-55" | "55+";
   skin_type?: "dry" | "oily" | "combination" | "sensitive";
