@@ -246,7 +246,7 @@ export default function OnboardingPage() {
           initializeSession(username.trim(), existingProfile.id);
           updateSessionProfile(existingProfile);
           
-          alert(`Welcome back, ${username}! Your profile has been loaded.`);
+          //alert(`Welcome back, ${username}! Your profile has been loaded.`);
           router.push("/dashboard");
           return;
         } else {
@@ -371,22 +371,9 @@ export default function OnboardingPage() {
         </div>
       </div>
 
-      {/* Info Banner - What we'll do */}
-      <div className="bg-gradient-to-r from-teal-500 to-cyan-600 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3">
-          <div className="flex items-center gap-3">
-            <Check className="h-5 w-5 flex-shrink-0" />
-            <div>
-              <p className="text-sm font-semibold">What we'll do</p>
-              <p className="text-xs opacity-90">Track weather, predict flare-ups, send alerts</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
-        <Card className="shadow-xl border-0">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-2 pb-6">
+        <Card className="shadow-xl border-0 pt-0">
           <CardContent className="p-6 sm:p-8">
             {/* Top Section - Username & Location in 2 columns */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 mb-6 pb-6 border-b">
@@ -423,7 +410,7 @@ export default function OnboardingPage() {
 
                 {/* Email field (optional) */}
                 <div className="mt-4">
-                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="flex items-center justify-start gap-2 flex-wrap">
                     <Label className="text-xs font-medium text-gray-700">Email (Optional)</Label>
                     <p className="text-xs text-gray-500">💡 Only enter if you want to recover your username</p>
                   </div>

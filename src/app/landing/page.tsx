@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { TrendingUp, Cloud, ShieldCheck, Smartphone } from 'lucide-react';
+import { TrendingUp, Camera, Brain, Bell } from 'lucide-react';
 import { Logo } from '@/components/Logo';
 
 export default function LandingPage() {
@@ -52,9 +52,9 @@ export default function LandingPage() {
                   <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center mb-3">
                     <TrendingUp className="h-5 w-5 text-teal-600" />
                   </div>
-                  <h3 className="font-semibold text-gray-900 mb-1 text-sm">Risk Assessment</h3>
+                  <h3 className="font-semibold text-gray-900 mb-1 text-sm">Smart Risk Tracking</h3>
                   <p className="text-xs text-gray-600">
-                    Real-time analysis based on weather, air quality, and pollen levels
+                    AI-powered analysis of weather, air quality, and pollen to predict flare-ups
                   </p>
                 </CardContent>
               </Card>
@@ -62,11 +62,11 @@ export default function LandingPage() {
               <Card className="border-none shadow-lg bg-white/80 backdrop-blur hover:shadow-xl transition-shadow">
                 <CardContent className="p-4">
                   <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mb-3">
-                    <Cloud className="h-5 w-5 text-blue-600" />
+                    <Camera className="h-5 w-5 text-blue-600" />
                   </div>
-                  <h3 className="font-semibold text-gray-900 mb-1 text-sm">Cloud Backup</h3>
+                  <h3 className="font-semibold text-gray-900 mb-1 text-sm">Photo Journaling</h3>
                   <p className="text-xs text-gray-600">
-                    Your data synced securely across all your devices
+                    Upload skin photos to track progress and personalize your insights
                   </p>
                 </CardContent>
               </Card>
@@ -74,11 +74,11 @@ export default function LandingPage() {
               <Card className="border-none shadow-lg bg-white/80 backdrop-blur hover:shadow-xl transition-shadow">
                 <CardContent className="p-4">
                   <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mb-3">
-                    <ShieldCheck className="h-5 w-5 text-purple-600" />
+                    <Brain className="h-5 w-5 text-purple-600" />
                   </div>
-                  <h3 className="font-semibold text-gray-900 mb-1 text-sm">Privacy First</h3>
+                  <h3 className="font-semibold text-gray-900 mb-1 text-sm">AI Recommendations</h3>
                   <p className="text-xs text-gray-600">
-                    Your data stays in your own Google Drive, fully encrypted
+                    Personalized advice based on your triggers, severity, and patterns
                   </p>
                 </CardContent>
               </Card>
@@ -86,11 +86,11 @@ export default function LandingPage() {
               <Card className="border-none shadow-lg bg-white/80 backdrop-blur hover:shadow-xl transition-shadow">
                 <CardContent className="p-4">
                   <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mb-3">
-                    <Smartphone className="h-5 w-5 text-green-600" />
+                    <Bell className="h-5 w-5 text-green-600" />
                   </div>
-                  <h3 className="font-semibold text-gray-900 mb-1 text-sm">Local First</h3>
+                  <h3 className="font-semibold text-gray-900 mb-1 text-sm">Proactive Alerts</h3>
                   <p className="text-xs text-gray-600">
-                    All data stored locally on your device for instant access
+                    Get notified before conditions trigger a flare-up
                   </p>
                 </CardContent>
               </Card>
@@ -103,7 +103,7 @@ export default function LandingPage() {
                   Get Started
                 </h2>
                 <p className="text-gray-600 mb-4 text-center text-sm">
-                  Choose how you'd like to use DermAIr
+                  Create your profile to begin
                 </p>
 
                 {error && (
@@ -113,7 +113,7 @@ export default function LandingPage() {
                 )}
 
                 <div className="space-y-3">
-                  {/* Local Only Button */}
+                  {/* Get Started Button */}
                   <Button
                     onClick={handleContinueLocal}
                     disabled={isLoading}
@@ -125,12 +125,12 @@ export default function LandingPage() {
 
                   <div className="mt-4 p-3 bg-teal-50 rounded-lg border border-teal-100">
                     <p className="text-xs font-medium text-teal-900 mb-1">
-                      ✨ No sign-in required!
+                      ✨ Quick & Simple Setup
                     </p>
                     <ul className="text-xs text-teal-700 space-y-0.5">
-                      <li>• All data is stored securely in your browser</li>
-                      <li>• No account needed for demo</li>
-                      <li>• You can export your data anytime</li>
+                      <li>• Choose a username to identify your profile</li>
+                      <li>• Your data is securely stored</li>
+                      <li>• Access from any device with your username</li>
                     </ul>
                   </div>
 
