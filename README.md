@@ -1,4 +1,4 @@
-# 🌤️ DermAlr - Smart Skin Health Companion
+# DermAlr - Smart Skin Health Companion
 
 **Smart skin care powered by AI and weather insights**
 
@@ -6,13 +6,13 @@ DermAlr helps you understand how environmental conditions affect your skin healt
 
 ---
 
-## 📱 What is DermAlr?
+## What is DermAlr?
 
 DermAlr is an intelligent health companion that combines real-time weather data with AI analysis to help people managing their skin condition more effectively. The app tracks your symptoms, identifies triggers, and provides predictive insights based on environmental factors.
 
 ---
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 - **Frontend**: Next.js 15.5.4, React 19, TypeScript 5
 - **Styling**: Tailwind CSS 3, shadcn/ui components
@@ -23,27 +23,27 @@ DermAlr is an intelligent health companion that combines real-time weather data 
 
 ---
 
-## ✨ Key Features
+## Key Features
 
-### 🌡️ Smart Risk Assessment
+### Smart Risk Assessment
 
 - Real-time risk scoring based on weather conditions (humidity, temperature, UV, pollen)
 - Color-coded risk levels: Low (green), Moderate (yellow), High (orange), Severe (red)
 - Personalized alerts when conditions match your triggers
 
-### 🤖 AI-Powered Insights
+### AI-Powered Insights
 
 - Advanced pattern recognition in your symptom history
 - Predictive analysis to forecast potential flare-ups
 - Personalized recommendations based on your unique profile
 
-### 📊 Health Tracking
+### Health Tracking
 
 - Daily check-ins to log symptoms and severity
 - Track known triggers (humidity, stress, allergens, etc.)
 - Visual analytics with trend charts and correlations
 
-###  Privacy & Security
+### Privacy & Security
 
 - PIN-protected accounts (no email required)
 - Secure data encryption
@@ -51,7 +51,7 @@ DermAlr is an intelligent health companion that combines real-time weather data 
 
 ---
 
-## 👤 User Onboarding
+## User Onboarding
 
 DermAlr features a **2-minute personalized setup** that collects essential information:
 
@@ -78,7 +78,7 @@ Once complete, you're taken to your personalized dashboard with real-time insigh
 
 ---
 
-## 🧠 How Insights Are Generated
+## How Insights Are Generated
 
 ### Data Collection
 
@@ -107,7 +107,7 @@ The AI engine combines these factors to provide a **confidence-scored risk asses
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -138,7 +138,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ---
 
-## 📧 Contact & Feedback
+## Contact & Feedback
 
 Have questions, suggestions, or feedback? I'd love to hear from you!
 
@@ -146,7 +146,7 @@ Have questions, suggestions, or feedback? I'd love to hear from you!
 
 ---
 
-## 📄 License & Disclaimer
+## License & Disclaimer
 
 This application is for informational purposes only and is not a substitute for professional medical advice. Always consult with a healthcare provider for medical concerns.
 

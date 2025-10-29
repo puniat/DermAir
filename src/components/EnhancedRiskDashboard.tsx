@@ -80,11 +80,11 @@ export function EnhancedRiskDashboard({
   return (
     <div className={`space-y-6 ${className}`} id="enhanced-risk-dashboard">
       <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="recommendations">AI Recommendations</TabsTrigger>
-          <TabsTrigger value="treatment">Treatment Plan</TabsTrigger>
-          <TabsTrigger value="insights">Advanced Insights</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 gap-1">
+          <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
+          <TabsTrigger value="recommendations" className="text-xs sm:text-sm">AI Recommendations</TabsTrigger>
+          <TabsTrigger value="treatment" className="text-xs sm:text-sm">Treatment Plan</TabsTrigger>
+          <TabsTrigger value="insights" className="text-xs sm:text-sm">Advanced Insights</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
