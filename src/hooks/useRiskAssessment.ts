@@ -61,6 +61,7 @@ export interface EnhancedRiskAssessment {
   isAdvancedMode: boolean;
   processingTime: number;
   lastUpdated: Date;
+  loading: boolean; // Add loading state
 }
 
 export function useRiskAssessment(
@@ -75,6 +76,7 @@ export function useRiskAssessment(
   const [confidence, setConfidence] = useState<number>(0);
   const [reasoning, setReasoning] = useState<string>('');
   const [processingTime, setProcessingTime] = useState<number>(0);
+  const [loading, setLoading] = useState<boolean>(false);
   const lastUpdatedRef = useRef<Date>(new Date());
 
   // Create stable dependencies
@@ -112,7 +114,7 @@ export function useRiskAssessment(
     }
   }, [riskLevel, weatherHash, profileHash]); // Use stable hash dependencies
 
-  // Advanced AI assessment
+  // Advanced AI assessment with Gemini
   useEffect(() => {
     if (!useAdvancedAI || !weather || !profile) {
       // Clear advanced data when AI mode is disabled
@@ -129,12 +131,56 @@ export function useRiskAssessment(
 
     const performAdvancedAssessment = async () => {
       const startTime = performance.now();
+      setLoading(true); // Set loading to true when starting
       
       try {
         // Add a small delay to prevent blocking the main thread
         await new Promise(resolve => setTimeout(resolve, 10));
         
-        // Generate advanced risk assessment
+        // TRY AI ANALYSIS FIRST (Groq if API key configured)
+        let aiAnalysis = null;
+        try {
+          console.log('🔍 [Risk Assessment] Attempting AI analysis...');
+          const aiResponse = await fetch('/api/ai/analyze-risk', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              weather,
+              profile,
+              recentLogs: recentCheckIns.slice(0, 14)
+            })
+          });
+
+          console.log('🔍 [Risk Assessment] AI API response status:', aiResponse.status);
+
+          if (aiResponse.ok) {
+            const data = await aiResponse.json();
+            aiAnalysis = data.analysis;
+            
+            // Validate that aiAnalysis is not null/undefined
+            if (aiAnalysis) {
+              console.log('✅ [Risk Assessment] Using AI for risk assessment');
+              console.log('🤖 [Risk Assessment] AI Analysis:', {
+                riskLevel: aiAnalysis.riskLevel,
+                riskScore: aiAnalysis.riskScore,
+                confidence: aiAnalysis.confidence,
+                factorsCount: (aiAnalysis.factors || aiAnalysis.keyFactors || []).length
+              });
+            } else {
+              console.warn('⚠️ [Risk Assessment] AI returned null analysis');
+            }
+          } else {
+            const errorData = await aiResponse.json();
+            console.warn('⚠️ [Risk Assessment] AI API failed:', errorData);
+          }
+        } catch (aiError) {
+          console.log('⚠️ [Risk Assessment] AI not available:', aiError);
+          console.log('🔄 [Risk Assessment] Falling back to rule-based algorithm');
+        }
+
+        if (isCancelled) return;
+
+        // FALLBACK: Use rule-based algorithm (always run for backup)
         const assessment = await advancedRiskEngine.assessRisk({
           weather: weather,
           userProfile: profile,
@@ -151,9 +197,63 @@ export function useRiskAssessment(
 
         if (isCancelled) return;
 
+        // If AI provided analysis, merge it with rule-based assessment
+        let finalAssessment = assessment;
+        let finalConfidence = 0.85;
+        let finalReasoning = '';
+
+        if (aiAnalysis && typeof aiAnalysis === 'object') {
+          console.log('🔍 [Risk Assessment] Full AI Analysis:', JSON.stringify(aiAnalysis, null, 2));
+          
+          // Use AI's analysis but keep the structure
+          // Handle both 'factors' (Groq) and 'keyFactors' (Gemini) properties
+          const aiFactors = Array.isArray(aiAnalysis.factors) 
+            ? aiAnalysis.factors 
+            : Array.isArray(aiAnalysis.keyFactors)
+              ? aiAnalysis.keyFactors
+              : [];
+          
+          console.log('🔍 [Risk Assessment] AI Factors:', aiFactors.length, 'factors found');
+          
+          finalAssessment = {
+            ...assessment,
+            overallRisk: aiAnalysis.riskScore || assessment.overallRisk,
+            riskLevel: aiAnalysis.riskLevel || assessment.riskLevel,
+            confidence: aiAnalysis.confidence || 0.85,
+            // Merge factors from both AI and rule-based
+            factors: [
+              ...(aiFactors.length > 0 ? aiFactors.map((f: any) => ({
+                name: f.factor || f.name || 'Unknown Factor',
+                category: f.category || 'environmental',
+                impact: f.impact || 5,
+                confidence: aiAnalysis.confidence || 0.85,
+                evidence: 'high' as const,
+                clinicalSource: 'AI Analysis',
+                description: f.description || '',
+                interventions: []
+              })) : []),
+              ...assessment.factors
+            ].slice(0, 10), // Top 10 factors
+            predictions: {
+              next24h: aiAnalysis.predictions?.next24HourRisk || aiAnalysis.predictions?.next24h || assessment.predictions.next24h,
+              next7days: aiAnalysis.predictions?.next7days || assessment.predictions.next7days,
+              nextMonth: assessment.predictions.nextMonth
+            },
+            severity: {
+              current: aiAnalysis.riskScore || assessment.severity.current,
+              predicted: aiAnalysis.predictions?.next24HourRisk || aiAnalysis.predictions?.next7days || assessment.severity.predicted,
+              trajectory: aiAnalysis.predictions?.trajectory || assessment.severity.trajectory
+            }
+          };
+          finalConfidence = aiAnalysis.confidence || 0.85;
+          finalReasoning = aiAnalysis.aiInsights || aiAnalysis.reasoning || 'AI-powered analysis';
+        } else {
+          console.log('🔄 [Risk Assessment] Using rule-based algorithm only');
+        }
+
         // Generate AI-powered recommendations
         const aiContext = {
-          riskAssessment: assessment,
+          riskAssessment: finalAssessment,
           userProfile: profile,
           weatherData: weather,
           recentLogs: recentCheckIns.slice(0, 7), // Last week
@@ -172,16 +272,33 @@ export function useRiskAssessment(
 
         const aiResults = await aiRecommendationEngine.generateRecommendations(aiContext);
 
+        // If AI provided recommendations, use those instead
+        let finalRecommendations = aiResults.recommendations;
+        if (aiAnalysis && aiAnalysis.recommendations && Array.isArray(aiAnalysis.recommendations)) {
+          finalRecommendations = aiAnalysis.recommendations.map((rec: any, idx: number) => ({
+            id: `ai_${Date.now()}_${idx}`,
+            recommendation: typeof rec === 'string' ? rec : rec.recommendation,
+            rationale: typeof rec === 'string' ? 'Based on AI analysis of your health data and environmental factors' : (rec.rationale || 'Based on current risk factors'),
+            priority: typeof rec === 'string' ? 'medium' : (rec.priority || 'medium'),
+            category: rec.category,
+            evidence: 'grade_a' as const,
+            confidence: aiAnalysis.confidence || 0.85,
+            timeframe: 'immediate',
+            contraindications: [],
+            monitoring: []
+          }));
+        }
+
         if (isCancelled) return;
 
         const endTime = performance.now();
 
         // Update state
-        setAdvancedAssessment(assessment);
-        setAiRecommendations(aiResults.recommendations);
+        setAdvancedAssessment(finalAssessment);
+        setAiRecommendations(finalRecommendations);
         setTreatmentPlan(aiResults.treatmentPlan);
-        setConfidence(aiResults.confidence);
-        setReasoning(aiResults.reasoning);
+        setConfidence(finalConfidence);
+        setReasoning(finalReasoning || aiResults.reasoning);
         setProcessingTime(endTime - startTime);
         lastUpdatedRef.current = new Date();
 
@@ -193,6 +310,8 @@ export function useRiskAssessment(
         setTreatmentPlan(null);
         setConfidence(0.7); // Basic confidence for legacy mode
         setReasoning('Using basic risk assessment due to processing error.');
+      } finally {
+        setLoading(false); // Set loading to false when done
       }
     };
 
@@ -223,7 +342,8 @@ export function useRiskAssessment(
       // System metadata
       isAdvancedMode: useAdvancedAI && !!advancedAssessment,
       processingTime,
-      lastUpdated: lastUpdatedRef.current
+      lastUpdated: lastUpdatedRef.current,
+      loading // Add loading state to return
     };
 
     return result;
@@ -237,7 +357,8 @@ export function useRiskAssessment(
     confidence,
     reasoning,
     useAdvancedAI,
-    processingTime
+    processingTime,
+    loading
     // Note: lastUpdated is intentionally excluded to prevent infinite loops
   ]);
 }

@@ -20,10 +20,7 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-blue-50">
-      {/* Prototype Banner */}
-      <div className="w-full bg-pink-100 border-b border-yellow-300 text-yellow-900 py-2 px-4 text-center text-sm font-semibold shadow-sm z-50">
-        🚧 This is a prototype for a small audience. We are actively working on a full production version. Feedback is welcome!
-      </div>
+
       {/* Hero Section */}
       <div className="container mx-auto px-4 py-6">
         <div className="max-w-6xl mx-auto">
@@ -38,7 +35,7 @@ export default function LandingPage() {
                 Welcome to <span className="bg-gradient-to-r from-teal-600 to-blue-600 bg-clip-text text-transparent">DermAIr</span>
               </h1>
               <p className="text-lg text-gray-600">
-                Your intelligent companion for managing eczema and dermatitis with AI-powered insights and personalized recommendations
+                Your intelligent companion for managing skin conditions with AI-powered insights and personalized recommendations
               </p>
             </div>
           </div>

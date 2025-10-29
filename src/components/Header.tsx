@@ -15,10 +15,15 @@ interface HeaderProps {
   shouldShowAlert: boolean
   onRefresh?: () => void
   onShowNotificationSettings: () => void
-  onShowAnalytics: () => void
+  onShowAnalytics?: () => void
   onShowCheckIn: () => void
   onShowAccountSettings?: () => void
   hasTodaysCheckIn: boolean
+  riskAssessment?: {
+    confidence: number
+    processingTime: number
+    isAdvancedMode: boolean
+  }
 }
 
 export function Header({ 
@@ -29,7 +34,8 @@ export function Header({
   onShowAnalytics,
   onShowCheckIn,
   onShowAccountSettings,
-  hasTodaysCheckIn
+  hasTodaysCheckIn,
+  riskAssessment
 }: HeaderProps) {
   const { isAIModeEnabled, toggleAIMode } = useAIModeStore()
 
@@ -66,14 +72,16 @@ export function Header({
               >
                 🔔 Notifications
               </Button>
-              <Button 
-                onClick={onShowAnalytics} 
-                variant="ghost" 
-                size="sm"
-                className="text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-              >
-                📊 Analytics
-              </Button>
+              {onShowAnalytics && (
+                <Button 
+                  onClick={onShowAnalytics} 
+                  variant="ghost" 
+                  size="sm"
+                  className="text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                >
+                  📊 Analytics
+                </Button>
+              )}
               
               {onShowAccountSettings && (
                 <Button 
@@ -101,7 +109,7 @@ export function Header({
               
               <HelpDialog />
               
-              {onRefresh && (
+              {/* {onRefresh && (
                 <Button
                   onClick={onRefresh}
                   variant="ghost"
@@ -111,7 +119,7 @@ export function Header({
                   <RefreshCw className="h-4 w-4 mr-1" />
                   Refresh
                 </Button>
-              )}
+              )} */}
               
               <Button 
                 onClick={onShowCheckIn} 
@@ -123,10 +131,11 @@ export function Header({
             </div>
           </div>
         </div>
-        
-        {/* Date/Location Row */}
-        <div className="flex justify-end mt-1 pt-2 border-t border-gray-100">
-          <p className="text-xs text-muted-foreground">
+
+        {/* AI Analysis Banner & Date/Location Row - Side by Side */}
+        <div className="flex items-center justify-end mt-3 pt-3 border-t border-gray-100">          
+          {/* Date/Location - Right Side */}
+          <p className="text-xs text-muted-foreground font-bold">
             {profile?.location?.city && `${profile.location.city}, `}
             {new Date().toLocaleDateString("en-US", {
               weekday: "long",

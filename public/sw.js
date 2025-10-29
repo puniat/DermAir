@@ -47,8 +47,8 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          // Cache successful API responses
-          if (response.ok) {
+          // Only cache GET requests (POST, PUT, DELETE can't be cached)
+          if (response.ok && request.method === 'GET') {
             const responseClone = response.clone();
             caches.open(CACHE_NAME + '-api')
               .then((cache) => {
@@ -58,24 +58,37 @@ self.addEventListener('fetch', (event) => {
           return response;
         })
         .catch(() => {
-          // Return cached API response if available
-          return caches.match(request)
-            .then((cachedResponse) => {
-              if (cachedResponse) {
-                return cachedResponse;
-              }
-              // Return offline indicator for failed API calls
-              return new Response(
-                JSON.stringify({ 
-                  error: 'Offline mode', 
-                  offline: true 
-                }), 
-                {
-                  status: 503,
-                  headers: { 'Content-Type': 'application/json' }
+          // Return cached API response if available (only for GET requests)
+          if (request.method === 'GET') {
+            return caches.match(request)
+              .then((cachedResponse) => {
+                if (cachedResponse) {
+                  return cachedResponse;
                 }
-              );
-            });
+                // Return offline indicator for failed API calls
+                return new Response(
+                  JSON.stringify({ 
+                    error: 'Offline mode', 
+                    offline: true 
+                  }), 
+                  {
+                    status: 503,
+                    headers: { 'Content-Type': 'application/json' }
+                  }
+                );
+              });
+          }
+          // For POST/PUT/DELETE requests, just return error
+          return new Response(
+            JSON.stringify({ 
+              error: 'Network error', 
+              offline: true 
+            }), 
+            {
+              status: 503,
+              headers: { 'Content-Type': 'application/json' }
+            }
+          );
         })
     );
     return;

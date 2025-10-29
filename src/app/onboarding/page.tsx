@@ -400,7 +400,7 @@ export default function OnboardingPage() {
                       <p className="text-xs text-green-600">✓ Username available</p>
                     )}
                     {!usernameChecking && usernameAvailable === false && (
-                      <p className="text-xs text-orange-600">⚠️ Username exists - will load your existing profile</p>
+                      <p className="text-xs text-orange-600">⚠️ Username exists - Click Complete Setup & Go to Dashboard to load your existing profile</p>
                     )}
                   </div>
                 )}

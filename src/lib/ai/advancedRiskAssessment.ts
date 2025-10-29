@@ -412,88 +412,314 @@ export class AdvancedRiskEngine {
 
   private identifyRiskFactors(context: RiskAssessmentContext): AdvancedRiskFactor[] {
     const factors: AdvancedRiskFactor[] = [];
-    const { weather, userProfile } = context;
+    const { weather, userProfile, recentLogs, timeOfDay, season } = context;
 
-    // Humidity factor
-    if (weather.humidity < 30 || weather.humidity > 70) {
-      factors.push({
-        name: weather.humidity < 30 ? 'Low Humidity' : 'High Humidity',
-        category: 'environmental',
-        impact: weather.humidity < 30 ? 
-          Math.min(85, (30 - weather.humidity) * 2.5) : 
-          Math.min(75, (weather.humidity - 70) * 1.8),
-        confidence: 0.92,
-        evidence: 'high',
-        clinicalSource: 'Journal of Dermatological Science, 2023',
-        description: weather.humidity < 30 ? 
-          'Low humidity compromises skin barrier function and increases transepidermal water loss' :
-          'High humidity promotes bacterial growth and can trigger inflammatory responses',
-        interventions: weather.humidity < 30 ? 
-          ['Use humidifier (target 40-60%)', 'Apply heavy moisturizer', 'Reduce hot showers'] :
-          ['Improve ventilation', 'Use lighter moisturizers', 'Consider antifungal treatments']
-      });
+    // === ENVIRONMENTAL FACTORS ===
+    
+    // Humidity factor - ALWAYS include
+    const humidityImpact = Math.round(this.calculateHumidityRisk(weather.humidity));
+    let humidityName = 'Optimal Humidity';
+    let humidityDesc = 'Humidity levels are within optimal range for skin health';
+    let humidityInterventions = ['Maintain current humidity levels', 'Continue regular moisturizing routine'];
+    
+    if (weather.humidity < 30) {
+      humidityName = 'Low Humidity';
+      humidityDesc = 'Low humidity compromises skin barrier function and increases transepidermal water loss';
+      humidityInterventions = ['Use humidifier (target 40-60%)', 'Apply heavy moisturizer', 'Reduce hot showers'];
+    } else if (weather.humidity > 70) {
+      humidityName = 'High Humidity';
+      humidityDesc = 'High humidity promotes bacterial growth and can trigger inflammatory responses';
+      humidityInterventions = ['Improve ventilation', 'Use lighter moisturizers', 'Consider antifungal treatments'];
+    } else if (weather.humidity < 40 || weather.humidity > 60) {
+      humidityName = 'Moderate Humidity';
+      humidityDesc = 'Humidity levels are slightly outside optimal range but manageable';
+      humidityInterventions = ['Monitor skin hydration', 'Adjust moisturizer as needed'];
     }
 
-    // Temperature extremes
-    if (weather.temperature < 5 || weather.temperature > 30) {
-      factors.push({
-        name: weather.temperature < 5 ? 'Cold Temperature' : 'High Temperature',
-        category: 'environmental',
-        impact: weather.temperature < 5 ? 
-          Math.min(80, (5 - weather.temperature) * 3) : 
-          Math.min(70, (weather.temperature - 30) * 2),
-        confidence: 0.89,
-        evidence: 'high',
-        clinicalSource: 'British Journal of Dermatology, 2022',
-        description: weather.temperature < 5 ? 
-          'Cold temperatures reduce skin blood flow and compromise barrier function' :
-          'Heat increases sweating and can trigger inflammatory cascades',
-        interventions: weather.temperature < 5 ? 
-          ['Layer clothing', 'Protect exposed areas', 'Use occlusive moisturizers'] :
-          ['Stay in cool environments', 'Use cooling techniques', 'Shower with lukewarm water']
-      });
+    factors.push({
+      name: humidityName,
+      category: 'environmental',
+      impact: humidityImpact,
+      confidence: 0.92,
+      evidence: 'high',
+      clinicalSource: 'Journal of Dermatological Science, 2023',
+      description: humidityDesc,
+      interventions: humidityInterventions
+    });
+
+    // Temperature - ALWAYS include
+    const tempImpact = Math.round(this.calculateTemperatureRisk(weather.temperature));
+    let tempName = 'Optimal Temperature';
+    let tempDesc = 'Temperature is within comfortable range for skin health';
+    let tempInterventions = ['Maintain comfortable indoor temperature', 'Dress appropriately for conditions'];
+    
+    if (weather.temperature < 5) {
+      tempName = 'Cold Temperature';
+      tempDesc = 'Cold temperatures reduce skin blood flow and compromise barrier function';
+      tempInterventions = ['Layer clothing', 'Protect exposed areas', 'Use occlusive moisturizers'];
+    } else if (weather.temperature > 30) {
+      tempName = 'High Temperature';
+      tempDesc = 'Heat increases sweating and can trigger inflammatory cascades';
+      tempInterventions = ['Stay in cool environments', 'Use cooling techniques', 'Shower with lukewarm water'];
+    } else if (weather.temperature < 15) {
+      tempName = 'Cool Temperature';
+      tempDesc = 'Cooler temperatures may increase skin dryness';
+      tempInterventions = ['Dress warmly', 'Use moisturizing products', 'Protect exposed skin'];
+    } else if (weather.temperature > 24) {
+      tempName = 'Warm Temperature';
+      tempDesc = 'Warmer temperatures may increase perspiration';
+      tempInterventions = ['Stay hydrated', 'Use breathable fabrics', 'Avoid excessive sweating'];
     }
 
-    // Air quality
-    if (weather.air_quality_index > 100) {
-      factors.push({
-        name: 'Poor Air Quality',
-        category: 'environmental',
-        impact: Math.min(90, 55 + (weather.air_quality_index - 100) * 0.8),
-        confidence: 0.87,
-        evidence: 'high',
-        clinicalSource: 'Environmental Health Perspectives, 2023',
-        description: 'Air pollutants can penetrate compromised skin barriers and trigger inflammatory responses',
-        interventions: [
-          'Limit outdoor exposure',
-          'Use air purifiers indoors',
-          'Gentle cleansing after outdoor activities',
-          'Consider barrier creams'
-        ]
-      });
+    factors.push({
+      name: tempName,
+      category: 'environmental',
+      impact: tempImpact,
+      confidence: 0.89,
+      evidence: 'high',
+      clinicalSource: 'British Journal of Dermatology, 2022',
+      description: tempDesc,
+      interventions: tempInterventions
+    });
+
+    // Air quality - ALWAYS include
+    const aqiImpact = Math.round(this.calculateAirQualityRisk(weather.air_quality_index));
+    let aqiName = 'Good Air Quality';
+    let aqiDesc = 'Air quality is good with minimal risk to skin health';
+    let aqiInterventions = ['Enjoy outdoor activities', 'Maintain regular skin cleansing'];
+    
+    if (weather.air_quality_index > 150) {
+      aqiName = 'Unhealthy Air Quality';
+      aqiDesc = 'Poor air quality can significantly impact compromised skin barriers';
+      aqiInterventions = ['Limit outdoor exposure', 'Use air purifiers indoors', 'Gentle cleansing after outdoor activities', 'Consider barrier creams'];
+    } else if (weather.air_quality_index > 100) {
+      aqiName = 'Moderate Air Quality';
+      aqiDesc = 'Air pollutants can penetrate compromised skin barriers and trigger inflammatory responses';
+      aqiInterventions = ['Limit prolonged outdoor exposure', 'Use air purifiers indoors', 'Cleanse skin after outdoor activities'];
+    } else if (weather.air_quality_index > 50) {
+      aqiName = 'Fair Air Quality';
+      aqiDesc = 'Air quality is acceptable but may pose minor concerns for sensitive skin';
+      aqiInterventions = ['Be mindful during extended outdoor activities', 'Cleanse skin regularly'];
     }
 
-    // Pollen exposure
+    factors.push({
+      name: aqiName,
+      category: 'environmental',
+      impact: aqiImpact,
+      confidence: 0.87,
+      evidence: 'high',
+      clinicalSource: 'Environmental Health Perspectives, 2023',
+      description: aqiDesc,
+      interventions: aqiInterventions
+    });
+
+    // Pollen exposure - ALWAYS include
     const totalPollen = weather.pollen_count.overall;
-    if (totalPollen > 6) {
+    const pollenImpact = Math.round(this.calculatePollenRisk(weather.pollen_count));
+    let pollenName = 'Low Pollen';
+    let pollenDesc = 'Pollen levels are low and pose minimal allergy risk';
+    let pollenInterventions = ['No special precautions needed', 'Enjoy outdoor activities'];
+    
+    if (totalPollen > 9) {
+      pollenName = 'Very High Pollen';
+      pollenDesc = 'Very high pollen levels can significantly trigger atopic responses and worsen dermatitis';
+      pollenInterventions = ['Avoid outdoor activities during peak hours', 'Shower immediately after being outside', 'Consider antihistamines (consult physician)', 'Use HEPA filters'];
+    } else if (totalPollen > 6) {
+      pollenName = 'High Pollen';
+      pollenDesc = 'Pollen allergens can trigger atopic responses and worsen existing dermatitis';
+      pollenInterventions = ['Keep windows closed during peak hours', 'Shower after outdoor activities', 'Consider antihistamines (consult physician)', 'Use HEPA filters'];
+    } else if (totalPollen > 2) {
+      pollenName = 'Moderate Pollen';
+      pollenDesc = 'Moderate pollen levels may affect sensitive individuals';
+      pollenInterventions = ['Monitor symptoms', 'Shower after extended outdoor time', 'Keep windows closed during high pollen hours'];
+    }
+
+    factors.push({
+      name: pollenName,
+      category: 'environmental',
+      impact: pollenImpact,
+      confidence: 0.78,
+      evidence: 'moderate',
+      clinicalSource: 'Allergy and Asthma Proceedings, 2022',
+      description: pollenDesc,
+      interventions: pollenInterventions
+    });
+
+    // === PHYSIOLOGICAL FACTORS ===
+    
+    // Skin Barrier Function - based on recent check-ins
+    const barrierRisk = Math.round(this.assessSkinBarrierFunction(recentLogs, userProfile));
+    let barrierName = 'Normal Skin Barrier';
+    let barrierDesc = 'Skin barrier function appears healthy based on recent symptoms';
+    let barrierInterventions = ['Continue current skincare routine', 'Maintain regular moisturizing'];
+    
+    if (barrierRisk > 60) {
+      barrierName = 'Compromised Skin Barrier';
+      barrierDesc = 'Recent symptom patterns indicate significantly weakened skin barrier function with high inflammation';
+      barrierInterventions = ['Apply ceramide-rich moisturizers', 'Avoid harsh soaps', 'Consider barrier repair creams', 'Consult dermatologist if persists'];
+    } else if (barrierRisk > 40) {
+      barrierName = 'Weakened Skin Barrier';
+      barrierDesc = 'Moderate barrier disruption detected based on symptom trends';
+      barrierInterventions = ['Use gentle cleansers', 'Apply emollient moisturizers', 'Avoid hot water', 'Pat dry instead of rubbing'];
+    } else if (barrierRisk > 25) {
+      barrierName = 'Mild Barrier Stress';
+      barrierDesc = 'Slight barrier compromise, manageable with proper care';
+      barrierInterventions = ['Maintain hydration', 'Use pH-balanced products', 'Avoid irritants'];
+    }
+
+    factors.push({
+      name: barrierName,
+      category: 'physiological',
+      impact: barrierRisk,
+      confidence: 0.88,
+      evidence: 'high',
+      clinicalSource: 'Journal of Investigative Dermatology, 2023',
+      description: barrierDesc,
+      interventions: barrierInterventions
+    });
+
+    // Immune System Stress - based on medication use and symptom variability
+    const immuneRisk = Math.round(this.assessImmunologicalState(recentLogs, userProfile));
+    let immuneName = 'Normal Immune Response';
+    let immuneDesc = 'Immune system showing balanced inflammatory response';
+    let immuneInterventions = ['Maintain healthy diet', 'Get adequate sleep', 'Manage stress levels'];
+    
+    if (immuneRisk > 50) {
+      immuneName = 'Elevated Immune Stress';
+      immuneDesc = 'High medication use and symptom variability suggest heightened immune activation';
+      immuneInterventions = ['Prioritize sleep (7-9 hours)', 'Consider stress reduction techniques', 'Anti-inflammatory diet', 'Consult physician'];
+    } else if (immuneRisk > 30) {
+      immuneName = 'Moderate Immune Activation';
+      immuneDesc = 'Moderate immune system stress with variable inflammatory responses';
+      immuneInterventions = ['Reduce inflammatory triggers', 'Maintain consistent sleep schedule', 'Consider probiotic foods'];
+    }
+
+    factors.push({
+      name: immuneName,
+      category: 'physiological',
+      impact: immuneRisk,
+      confidence: 0.82,
+      evidence: 'moderate',
+      clinicalSource: 'Journal of Allergy and Clinical Immunology, 2023',
+      description: immuneDesc,
+      interventions: immuneInterventions
+    });
+
+    // Circadian Impact - time of day effects
+    const circadianRisk = Math.round(this.assessCircadianImpact(timeOfDay));
+    let circadianName = 'Baseline Circadian State';
+    let circadianDesc = 'Normal circadian rhythm with minimal inflammation cycling';
+    let circadianInterventions = ['Maintain regular sleep schedule'];
+    
+    if (circadianRisk > 12) {
+      circadianName = 'Peak Inflammation Period';
+      circadianDesc = 'Currently in peak inflammation window due to cortisol and circadian rhythms';
+      circadianInterventions = ['Apply topical treatments now for maximum effect', 'Avoid triggers during this window', 'Schedule activities accordingly'];
+    } else if (circadianRisk > 7) {
+      circadianName = 'Elevated Circadian Risk';
+      circadianDesc = 'Moderately elevated inflammation risk based on time of day';
+      circadianInterventions = ['Be mindful of symptom triggers', 'Apply preventive moisturizer'];
+    }
+
+    factors.push({
+      name: circadianName,
+      category: 'physiological',
+      impact: circadianRisk,
+      confidence: 0.75,
+      evidence: 'moderate',
+      clinicalSource: 'Chronobiology International, 2022',
+      description: circadianDesc,
+      interventions: circadianInterventions
+    });
+
+    // === CLINICAL FACTORS ===
+    
+    // User Skin Type Sensitivity
+    const skinTypeName = userProfile.skin_type || 'normal';
+    let skinTypeImpact = 10;
+    let skinTypeDesc = 'Normal skin type with moderate sensitivity';
+    let skinTypeInterventions = ['Use products suited to your skin type'];
+    
+    if (skinTypeName === 'sensitive') {
+      skinTypeImpact = 35;
+      skinTypeDesc = 'Highly sensitive skin type increases vulnerability to environmental triggers';
+      skinTypeInterventions = ['Use hypoallergenic products', 'Patch test new products', 'Avoid fragrances and dyes'];
+    } else if (skinTypeName === 'dry') {
+      skinTypeImpact = 28;
+      skinTypeDesc = 'Dry skin type requires enhanced moisture retention strategies';
+      skinTypeInterventions = ['Use rich emollients', 'Apply moisturizer immediately after bathing', 'Avoid alcohol-based products'];
+    } else if (skinTypeName === 'combination') {
+      skinTypeImpact = 15;
+      skinTypeDesc = 'Combination skin requires balanced approach to care';
+      skinTypeInterventions = ['Zone-specific treatments', 'Light moisturizers', 'Gentle cleansing'];
+    }
+
+    factors.push({
+      name: `${skinTypeName.charAt(0).toUpperCase() + skinTypeName.slice(1)} Skin Type`,
+      category: 'clinical',
+      impact: skinTypeImpact,
+      confidence: 0.95,
+      evidence: 'high',
+      clinicalSource: 'American Academy of Dermatology Guidelines, 2023',
+      description: skinTypeDesc,
+      interventions: skinTypeInterventions
+    });
+
+    // Known Triggers Analysis
+    const triggerCount = (userProfile.triggers || []).length;
+    if (triggerCount > 0) {
+      let triggerImpact = Math.min(50, triggerCount * 12);
+      let triggerDesc = `You have ${triggerCount} identified trigger(s): ${(userProfile.triggers || []).slice(0, 3).join(', ')}`;
+      
       factors.push({
-        name: 'High Pollen Exposure',
-        category: 'environmental',
-        impact: Math.min(75, 42 + (totalPollen - 6) * 8),
-        confidence: 0.78,
-        evidence: 'moderate',
-        clinicalSource: 'Allergy and Asthma Proceedings, 2022',
-        description: 'Pollen allergens can trigger atopic responses and worsen existing dermatitis',
+        name: `Multiple Known Triggers (${triggerCount})`,
+        category: 'clinical',
+        impact: triggerImpact,
+        confidence: 0.90,
+        evidence: 'high',
+        clinicalSource: 'Based on your personal trigger profile',
+        description: triggerDesc,
         interventions: [
-          'Keep windows closed during peak hours',
-          'Shower after outdoor activities',
-          'Consider antihistamines (consult physician)',
-          'Use HEPA filters'
+          'Avoid known triggers when possible',
+          'Keep trigger diary to identify patterns',
+          'Prepare preventive measures when exposure unavoidable'
         ]
       });
     }
 
-    return factors;
+    // Seasonal Risk Factor
+    const seasonalRisk = Math.round(this.getSeasonalRisk(season));
+    let seasonName = `${season.charAt(0).toUpperCase() + season.slice(1)} Season`;
+    let seasonDesc = 'Seasonal factors contribute to current risk level';
+    let seasonInterventions = ['Follow seasonal skincare adjustments'];
+    
+    if (season === 'winter') {
+      seasonDesc = 'Winter dryness and indoor heating significantly increase eczema risk';
+      seasonInterventions = ['Use heavy moisturizers', 'Run humidifiers indoors', 'Limit hot showers', 'Layer clothing'];
+    } else if (season === 'spring') {
+      seasonDesc = 'Spring allergens and pollen increase atopic response risk';
+      seasonInterventions = ['Monitor pollen counts', 'Keep windows closed', 'Shower after outdoor time', 'Consider antihistamines'];
+    } else if (season === 'summer') {
+      seasonDesc = 'Summer heat and humidity can trigger sweat-induced flares';
+      seasonInterventions = ['Stay cool', 'Wear breathable fabrics', 'Rinse after sweating', 'Use light moisturizers'];
+    } else if (season === 'fall') {
+      seasonDesc = 'Fall transition period with moderate environmental stress';
+      seasonInterventions = ['Adjust skincare for cooler weather', 'Prepare for winter', 'Monitor changing conditions'];
+    }
+
+    factors.push({
+      name: seasonName,
+      category: 'behavioral',
+      impact: seasonalRisk,
+      confidence: 0.80,
+      evidence: 'high',
+      clinicalSource: 'Dermatology Research and Practice, 2022',
+      description: seasonDesc,
+      interventions: seasonInterventions
+    });
+
+    // Sort by impact (highest first)
+    return factors.sort((a, b) => b.impact - a.impact);
   }
 
   private aggregateRiskScores(
