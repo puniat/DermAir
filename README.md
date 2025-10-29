@@ -20,7 +20,6 @@ DermAlr is an intelligent health companion that combines real-time weather data 
 - **Database**: Firebase (Firestore + Realtime Database)
 - **Weather API**: WeatherAPI.com for real-time environmental data
 - **Authentication**: PIN-based secure access (SHA-256 hashing)
-- **PWA**: Progressive Web App with offline support
 
 ---
 
@@ -44,13 +43,7 @@ DermAlr is an intelligent health companion that combines real-time weather data 
 - Track known triggers (humidity, stress, allergens, etc.)
 - Visual analytics with trend charts and correlations
 
-### 📱 Progressive Web App
-
-- Install on any device (mobile, tablet, desktop)
-- Works offline - data syncs when back online
-- Native app-like experience
-
-### 🔒 Privacy & Security
+###  Privacy & Security
 
 - PIN-protected accounts (no email required)
 - Secure data encryption
@@ -126,10 +119,10 @@ The AI engine combines these factors to provide a **confidence-scored risk asses
 
 ```bash
 # Clone the repository
-git clone https://github.com/puniat/DermAir.git
+git clone https://github.com/puniat/DermAlr.git
 
 # Navigate to project directory
-cd DermAir
+cd DermAlr
 
 # Install dependencies
 npm install
