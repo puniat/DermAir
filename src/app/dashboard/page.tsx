@@ -103,6 +103,11 @@ export default function EnhancedDashboardPage() {
     const isInitialLoad = loading || sessionLoading || !weather || !profile;
     const isAiLoading = riskAssessment.loading && useAdvancedAI;
     
+    // Check if risk assessment has actual data (not just default values)
+    const hasRiskData = riskAssessment.riskScore > 0 || 
+                        (riskAssessment.recommendations && riskAssessment.recommendations.length > 0) ||
+                        (riskAssessment.advancedAssessment !== null);
+    
     if (isInitialLoad || isAiLoading) {
       setShowAiLoading(true);
       
@@ -115,14 +120,14 @@ export default function EnhancedDashboardPage() {
       }, 200);
 
       return () => clearInterval(progressInterval);
-    } else if (!isAiLoading && !isInitialLoad && showAiLoading) {
-      // Complete the progress and hide after a brief moment
+    } else if (!isAiLoading && !isInitialLoad && showAiLoading && hasRiskData) {
+      // Only hide loading screen when we have actual risk assessment data
       setAiLoadingProgress(100);
       setTimeout(() => {
         setShowAiLoading(false);
-      }, 300);
+      }, 500); // Slightly longer delay to ensure smooth transition
     }
-  }, [riskAssessment.loading, useAdvancedAI, showAiLoading, loading, sessionLoading, weather, profile]);
+  }, [riskAssessment.loading, riskAssessment.riskScore, riskAssessment.recommendations, riskAssessment.advancedAssessment, useAdvancedAI, showAiLoading, loading, sessionLoading, weather, profile]);
 
   // Handlers
   const handleCheckInSubmit = async (data: DailyCheckInFormData) => {
@@ -229,6 +234,9 @@ export default function EnhancedDashboardPage() {
         {/* Enhanced Risk Dashboard - Always Visible */}
         <EnhancedRiskDashboard 
           userProfile={profile}
+          riskAssessment={riskAssessment}
+          weather={weather}
+          checkIns={checkIns}
           className="w-full"
           defaultTab={dashboardTab}
           onTabChange={setDashboardTab}

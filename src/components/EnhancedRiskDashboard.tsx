@@ -12,10 +12,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { useRiskAssessment, EnhancedRiskAssessment } from '@/hooks/useRiskAssessment';
-import { useWeather } from '@/hooks/useWeather';
-import { useCheckIns } from '@/hooks/useCheckIns';
-import { UserProfile } from '@/types';
+import { EnhancedRiskAssessment } from '@/hooks/useRiskAssessment';
+import { UserProfile, WeatherData, DailyLog } from '@/types';
 import { 
   Brain, 
   TrendingUp, 
@@ -36,15 +34,24 @@ import {
 
 interface EnhancedRiskDashboardProps {
   userProfile: UserProfile | null;
+  riskAssessment: EnhancedRiskAssessment;
+  weather: WeatherData | null;
+  checkIns: DailyLog[];
   className?: string;
   defaultTab?: string;
   onTabChange?: (tab: string) => void;
 }
 
-export function EnhancedRiskDashboard({ userProfile, className, defaultTab = 'overview', onTabChange }: EnhancedRiskDashboardProps) {
+export function EnhancedRiskDashboard({ 
+  userProfile, 
+  riskAssessment,
+  weather,
+  checkIns,
+  className, 
+  defaultTab = 'overview', 
+  onTabChange 
+}: EnhancedRiskDashboardProps) {
   const [activeTab, setActiveTab] = useState(defaultTab);
-  const { data: weather } = useWeather(userProfile);
-  const { checkIns } = useCheckIns();
   
   // Update active tab when defaultTab prop changes
   useEffect(() => {
@@ -57,13 +64,6 @@ export function EnhancedRiskDashboard({ userProfile, className, defaultTab = 'ov
       onTabChange(tab);
     }
   };
-  
-  const riskAssessment: EnhancedRiskAssessment = useRiskAssessment(
-    weather, 
-    userProfile, 
-    checkIns.slice(0, 14), // Last 2 weeks
-    true // Use advanced AI
-  );
 
   if (!userProfile) {
     return (
