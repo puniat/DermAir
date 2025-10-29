@@ -89,6 +89,88 @@ export async function getUserByUsername(username: string): Promise<UserProfile |
   }
 }
 
+// --- User Summary (for returning users) ---
+export async function getUserSummary(userId: string): Promise<{
+  username: string;
+  displayName: string;
+  lastActive: Date;
+  checkInsCount: number;
+  currentRiskLevel: 'low' | 'medium' | 'high' | 'severe';
+  streakDays: number;
+} | null> {
+  try {
+    console.log('🔍 Getting user summary for:', userId);
+    const profile = await getUserProfile(userId);
+    if (!profile) {
+      console.log('❌ No profile found for summary');
+      return null;
+    }
+
+    let checkInsCount = 0;
+    let streakDays = 0;
+
+    try {
+      // Get check-ins count (may not exist for new users)
+      const checkInsRef = collection(db, 'profiles', userId, 'checkins');
+      const checkInsSnapshot = await getDocs(checkInsRef);
+      checkInsCount = checkInsSnapshot.size;
+
+      // Calculate streak days (consecutive days with check-ins)
+      if (checkInsCount > 0) {
+        const checkInDates = checkInsSnapshot.docs
+          .map(doc => {
+            const data = doc.data();
+            return data.date?.toDate?.() || new Date(data.date);
+          })
+          .sort((a, b) => b.getTime() - a.getTime());
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        const currentDate = new Date(today);
+        for (const checkInDate of checkInDates) {
+          const checkDate = new Date(checkInDate);
+          checkDate.setHours(0, 0, 0, 0);
+          
+          if (checkDate.getTime() === currentDate.getTime()) {
+            streakDays++;
+            currentDate.setDate(currentDate.getDate() - 1);
+          } else {
+            break;
+          }
+        }
+      }
+    } catch (checkInsError) {
+      console.log('⚠️ No check-ins found (new user):', checkInsError);
+      // Continue with checkInsCount = 0 and streakDays = 0
+    }
+
+    // Get most recent severity (simplified risk level)
+    let currentRiskLevel: 'low' | 'medium' | 'high' | 'severe' = 'low';
+    if (profile.severityHistory && profile.severityHistory.length > 0) {
+      const latestSeverity = profile.severityHistory[profile.severityHistory.length - 1];
+      currentRiskLevel = latestSeverity.severity === 'severe' ? 'severe' :
+                        latestSeverity.severity === 'moderate' ? 'medium' : 'low';
+    }
+
+    const summary = {
+      username: profile.username || '',
+      displayName: profile.username || 'User',
+      lastActive: profile.created_at || new Date(),
+      checkInsCount,
+      currentRiskLevel,
+      streakDays
+    };
+
+    console.log('✅ User summary generated:', summary);
+    return summary;
+  } catch (error: any) {
+    console.error('❌ Error getting user summary:', error);
+    // Return null to indicate failure
+    return null;
+  }
+}
+
 // --- User Profile ---
 export async function getUserProfile(userId: string): Promise<UserProfile | null> {
   try {
@@ -148,6 +230,7 @@ export async function saveUserProfile(profile: UserProfile) {
     id: profile.id,
     username: (profile.username || '').toLowerCase(), // Store username in lowercase for consistency
     email: profile.email ? profile.email.toLowerCase() : null, // Store email in lowercase, null if not provided
+    pin: profile.pin || null, // Store hashed PIN for authentication
     known_triggers: profile.known_triggers || [],
     triggers: profile.triggers || [],
     severityHistory,

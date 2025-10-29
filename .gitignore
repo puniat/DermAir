@@ -41,3 +41,6 @@ yarn-error.log*
 next-env.d.ts
 
 .vercel
+DELETE_USER_INSTRUCTIONS.md
+delete-user.js
+dermalr-ux-feedback.md
