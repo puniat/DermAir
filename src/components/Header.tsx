@@ -49,7 +49,7 @@ export function Header({
               <Logo size="sm" />
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">DermAIr Health Dashboard</h1>
-                <p className="text-sm text-gray-600">Medical-grade risk assessment with personalized recommendations</p>
+                <p className="text-sm text-gray-600">Smart skin care powered by AI and weather insights</p>
               </div>
             </div>
           </div>
@@ -132,11 +132,26 @@ export function Header({
           </div>
         </div>
 
-        {/* AI Analysis Banner & Date/Location Row - Side by Side */}
-        <div className="flex items-center justify-end mt-3 pt-3 border-t border-gray-100">          
+        {/* Username & Date/Location Row */}
+        <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
+          {/* Welcome Username - Left Side */}
+          <div className="flex items-center gap-2">
+            {profile?.username && (
+              <p className="text-sm font-semibold">
+                <span className="text-gray-600">Welcome,</span>{' '}
+                <span className="bg-gradient-to-r from-teal-600 via-cyan-600 to-blue-600 bg-clip-text text-transparent font-bold">
+                  {profile.username}
+                </span>
+                {' '}
+                <span className="text-lg">👋</span>
+              </p>
+            )}
+          </div>
+          
           {/* Date/Location - Right Side */}
           <p className="text-xs text-muted-foreground font-bold">
             {profile?.location?.city && `${profile.location.city}, `}
+            {profile?.location?.country && `${profile.location.country} • `}
             {new Date().toLocaleDateString("en-US", {
               weekday: "long",
               month: "long", 

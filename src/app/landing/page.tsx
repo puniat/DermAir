@@ -87,42 +87,16 @@ export default function LandingPage() {
               pinLength: profile.pin?.length || 0
             });
             
-            // Check if user has a PIN set
+            // All users must have a PIN - no legacy users
             if (profile.pin) {
               // User has PIN - require verification
               console.log('[Landing] PIN detected, showing verification screen');
               setUserState('verifying');
             } else {
-              // Legacy user without PIN - allow access but should set PIN
-              console.log('[Landing] No PIN found, treating as legacy user');
-              try {
-                const summary = await getUserSummary(profile.id);
-                if (summary) {
-                  setUserSummary(summary);
-                } else {
-                  // Create fallback summary
-                  setUserSummary({
-                    username: profile.username || username,
-                    displayName: profile.username || username,
-                    lastActive: profile.created_at || new Date(),
-                    checkInsCount: 0,
-                    currentRiskLevel: 'low',
-                    streakDays: 0
-                  });
-                }
-              } catch (summaryError) {
-                console.error('Error fetching summary, using fallback:', summaryError);
-                setUserSummary({
-                  username: profile.username || username,
-                  displayName: profile.username || username,
-                  lastActive: profile.created_at || new Date(),
-                  checkInsCount: 0,
-                  currentRiskLevel: 'low',
-                  streakDays: 0
-                });
-              }
-              
-              setUserState('returning');
+              // Data error - user exists but has no PIN
+              console.error('[Landing] User exists but has no PIN - data integrity issue');
+              setError('Account error: No PIN found. Please contact support or create a new account.');
+              setUserState('initial');
             }
           } else {
             setError('Error loading user data. Please try again.');
@@ -416,13 +390,13 @@ export default function LandingPage() {
                 {userState === 'verifying' && (
                   <div>
                     <div className="flex justify-center mb-4">
-                      <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl shadow-lg flex items-center justify-center">
+                      <div className="w-16 h-16 bg-gradient-to-br from-teal-500 to-cyan-500 rounded-2xl shadow-lg flex items-center justify-center">
                         <Lock className="w-8 h-8 text-white" />
                       </div>
                     </div>
 
                     <h2 className="text-2xl font-bold text-center mb-2">
-                      Welcome back, <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">@{username}</span>!
+                      Welcome back, <span className="bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">@{username}</span>!
                     </h2>
                     <p className="text-center text-gray-600 mb-4 text-sm">
                       Enter your PIN to access your health data
@@ -442,7 +416,7 @@ export default function LandingPage() {
                             value={pin}
                             onChange={handlePinChange}
                             onKeyPress={(e) => e.key === 'Enter' && handleVerifyPin()}
-                            className="w-full pr-10 text-base h-12 border-2 focus:border-purple-500 text-center tracking-widest text-xl font-mono"
+                            className="w-full pr-10 text-base h-12 border-2 focus:border-teal-500 text-center tracking-widest text-xl font-mono"
                             autoFocus
                             maxLength={6}
                             style={{ fontSize: '20px' }}
@@ -472,7 +446,7 @@ export default function LandingPage() {
                       <Button 
                         onClick={handleVerifyPin}
                         disabled={pin.length < 4 || isVerifying}
-                        className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white h-12 font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full bg-gradient-to-r from-teal-600 to-cyan-600 text-white h-12 font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {isVerifying ? (
                           <>

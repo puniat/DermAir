@@ -68,6 +68,7 @@ export async function getUserByUsername(username: string): Promise<UserProfile |
       id: data.id,
       username: data.username || '',
       email: data.email || '',
+      pin: data.pin || null,
       age_range: data.age_range,
       skin_type: data.skin_type,
       location: data.location,
