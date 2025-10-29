@@ -1,6 +1,6 @@
 # 🌤️ DermAlr - Smart Skin Health Companion
 
-**AI-powered weather insights for eczema and dermatitis management**
+**Smart skin care powered by AI and weather insights**
 
 DermAlr helps you understand how environmental conditions affect your skin health and provides personalized recommendations to prevent flare-ups before they happen.
 
