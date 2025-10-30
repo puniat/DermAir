@@ -228,71 +228,71 @@ export default function LandingPage() {
     <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-blue-50">
 
       {/* Hero Section */}
-      <div className="container mx-auto px-4 py-6">
+      <div className="container mx-auto px-4 py-3 md:py-6">
         <div className="max-w-6xl mx-auto">
           {/* Header with Logo */}
-          <div className="flex flex-col lg:flex-row items-center gap-8 mb-8">
+          <div className="flex flex-col lg:flex-row items-center gap-4 md:gap-8 mb-4 md:mb-8">
             {/* Eye-catching Logo */}
-            <Logo size="md" />
+            <Logo size="sm" />
 
             {/* Title and Description */}
             <div className="flex-1 text-center lg:text-left">
-              <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-3">
+              <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-2 md:mb-3">
                 Welcome to <span className="bg-gradient-to-r from-teal-600 to-blue-600 bg-clip-text text-transparent">DermAIr</span>
               </h1>
-              <p className="text-lg text-gray-600">
-                Your intelligent companion for managing skin conditions with AI-powered insights and personalized recommendations
+              <p className="text-sm md:text-lg text-gray-600">
+                Your intelligent companion for managing skin conditions with AI-powered insights
               </p>
             </div>
           </div>
           
           {/* Main Content Grid */}
-          <div className="grid lg:grid-cols-2 gap-6">
+          <div className="grid lg:grid-cols-2 gap-4 md:gap-6">
             {/* Left: Feature Cards */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-2 md:gap-4">
               <Card className="border-none shadow-lg bg-white/80 backdrop-blur hover:shadow-xl transition-shadow">
-                <CardContent className="p-4">
-                  <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center mb-3">
-                    <TrendingUp className="h-5 w-5 text-teal-600" />
+                <CardContent className="p-2 md:p-3">
+                  <div className="w-6 h-6 md:w-8 md:h-8 bg-teal-100 rounded-lg flex items-center justify-center mb-1 md:mb-2">
+                    <TrendingUp className="h-3 w-3 md:h-4 md:w-4 text-teal-600" />
                   </div>
-                  <h3 className="font-semibold text-gray-900 mb-1 text-sm">Smart Risk Tracking</h3>
-                  <p className="text-xs text-gray-600">
+                  <h3 className="font-semibold text-gray-900 mb-0.5 md:mb-1 text-[10px] md:text-xs leading-tight">Smart Risk Tracking</h3>
+                  <p className="text-[9px] md:text-xs text-gray-600 leading-tight hidden md:block">
                     AI-powered analysis of weather, air quality, and pollen to predict flare-ups
                   </p>
                 </CardContent>
               </Card>
 
               <Card className="border-none shadow-lg bg-white/80 backdrop-blur hover:shadow-xl transition-shadow">
-                <CardContent className="p-4">
-                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mb-3">
-                    <Camera className="h-5 w-5 text-blue-600" />
+                <CardContent className="p-2 md:p-3">
+                  <div className="w-6 h-6 md:w-8 md:h-8 bg-blue-100 rounded-lg flex items-center justify-center mb-1 md:mb-2">
+                    <Camera className="h-3 w-3 md:h-4 md:w-4 text-blue-600" />
                   </div>
-                  <h3 className="font-semibold text-gray-900 mb-1 text-sm">Photo Journaling</h3>
-                  <p className="text-xs text-gray-600">
+                  <h3 className="font-semibold text-gray-900 mb-0.5 md:mb-1 text-[10px] md:text-xs leading-tight">Photo Journaling</h3>
+                  <p className="text-[9px] md:text-xs text-gray-600 leading-tight hidden md:block">
                     Upload skin photos to track progress and personalize your insights
                   </p>
                 </CardContent>
               </Card>
 
               <Card className="border-none shadow-lg bg-white/80 backdrop-blur hover:shadow-xl transition-shadow">
-                <CardContent className="p-4">
-                  <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mb-3">
-                    <Brain className="h-5 w-5 text-purple-600" />
+                <CardContent className="p-2 md:p-3">
+                  <div className="w-6 h-6 md:w-8 md:h-8 bg-purple-100 rounded-lg flex items-center justify-center mb-1 md:mb-2">
+                    <Brain className="h-3 w-3 md:h-4 md:w-4 text-purple-600" />
                   </div>
-                  <h3 className="font-semibold text-gray-900 mb-1 text-sm">AI Recommendations</h3>
-                  <p className="text-xs text-gray-600">
+                  <h3 className="font-semibold text-gray-900 mb-0.5 md:mb-1 text-[10px] md:text-xs leading-tight">AI Recommendations</h3>
+                  <p className="text-[9px] md:text-xs text-gray-600 leading-tight hidden md:block">
                     Personalized advice based on your triggers, severity, and patterns
                   </p>
                 </CardContent>
               </Card>
 
               <Card className="border-none shadow-lg bg-white/80 backdrop-blur hover:shadow-xl transition-shadow">
-                <CardContent className="p-4">
-                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mb-3">
-                    <Bell className="h-5 w-5 text-green-600" />
+                <CardContent className="p-2 md:p-3">
+                  <div className="w-6 h-6 md:w-8 md:h-8 bg-green-100 rounded-lg flex items-center justify-center mb-1 md:mb-2">
+                    <Bell className="h-3 w-3 md:h-4 md:w-4 text-green-600" />
                   </div>
-                  <h3 className="font-semibold text-gray-900 mb-1 text-sm">Proactive Alerts</h3>
-                  <p className="text-xs text-gray-600">
+                  <h3 className="font-semibold text-gray-900 mb-0.5 md:mb-1 text-[10px] md:text-xs leading-tight">Proactive Alerts</h3>
+                  <p className="text-[9px] md:text-xs text-gray-600 leading-tight hidden md:block">
                     Get notified before conditions trigger a flare-up
                   </p>
                 </CardContent>
@@ -301,22 +301,22 @@ export default function LandingPage() {
 
             {/* Right: Get Started Panel - Dynamic based on user state */}
             <Card className="border-none shadow-2xl bg-white">
-              <CardContent className="p-6">
+              <CardContent className="p-4 md:p-6">
                 
                 {/* Initial/Checking/New User State */}
                 {(userState === 'initial' || userState === 'checking' || userState === 'new') && (
                   <div>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-2 text-center">
+                    <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-1.5 md:mb-2 text-center">
                       Get Started
                     </h2>
-                    <p className="text-gray-600 mb-4 text-center text-sm">
+                    <p className="text-gray-600 mb-3 md:mb-4 text-center text-xs md:text-sm">
                       {userState === 'new' ? 'Create your account' : 'Enter your username'}
                     </p>
 
-                    <div className="space-y-3">
+                    <div className="space-y-2 md:space-y-3">
                       {/* Username Input */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1.5 md:mb-2">
                           Username
                         </label>
                         <div className="relative">
@@ -325,31 +325,31 @@ export default function LandingPage() {
                             placeholder="e.g., john_doe or skincare_user"
                             value={username}
                             onChange={handleUsernameChange}
-                            className="w-full pr-10 text-base h-12 border-2 focus:border-teal-500"
+                            className="w-full pr-10 text-sm md:text-base h-10 md:h-12 border-2 focus:border-teal-500"
                             autoFocus
                             style={{ fontSize: '16px' }}
                           />
                           {userState === 'checking' && (
-                            <div className="absolute right-3 top-3">
-                              <Loader2 className="w-5 h-5 text-gray-400 animate-spin" />
+                            <div className="absolute right-3 top-2 md:top-3">
+                              <Loader2 className="w-4 h-4 md:w-5 md:h-5 text-gray-400 animate-spin" />
                             </div>
                           )}
                           {userState === 'new' && username.length >= 3 && (
-                            <div className="absolute right-3 top-3">
-                              <CheckCircle2 className="w-5 h-5 text-green-500" />
+                            <div className="absolute right-3 top-2 md:top-3">
+                              <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5 text-green-500" />
                             </div>
                           )}
                         </div>
 
                         {error && (
-                          <div className="mt-2 flex items-center gap-2 text-sm text-red-600">
-                            <AlertTriangle className="w-4 h-4" />
+                          <div className="mt-1.5 md:mt-2 flex items-center gap-2 text-xs md:text-sm text-red-600">
+                            <AlertTriangle className="w-3 h-3 md:w-4 md:h-4" />
                             <span>{error}</span>
                           </div>
                         )}
 
                         {!error && username.length > 0 && username.length < 3 && (
-                          <p className="text-xs text-gray-500 mt-2">
+                          <p className="text-[10px] md:text-xs text-gray-500 mt-1.5 md:mt-2">
                             Username must be at least 3 characters
                           </p>
                         )}
@@ -359,27 +359,27 @@ export default function LandingPage() {
                       {userState === 'new' && (
                         <Button
                           onClick={handleContinueToOnboarding}
-                          className="w-full h-12 bg-gradient-to-r from-teal-600 to-blue-600 text-white font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all"
+                          className="w-full h-10 md:h-12 text-sm md:text-base bg-gradient-to-r from-teal-600 to-blue-600 text-white font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all"
                         >
                           Create Account
-                          <ArrowRight className="w-5 h-5 ml-2" />
+                          <ArrowRight className="w-4 h-4 md:w-5 md:h-5 ml-2" />
                         </Button>
                       )}
 
                       {/* Info Panel */}
-                      <div className="mt-4 p-3 bg-teal-50 rounded-lg border border-teal-100">
-                        <p className="text-xs font-medium text-teal-900 mb-1">
+                      <div className="mt-3 md:mt-4 p-2 md:p-3 bg-teal-50 rounded-lg border border-teal-100">
+                        <p className="text-[10px] md:text-xs font-medium text-teal-900 mb-0.5 md:mb-1">
                           ✨ Quick & Simple Setup
                         </p>
-                        <ul className="text-xs text-teal-700 space-y-0.5">
+                        <ul className="text-[9px] md:text-xs text-teal-700 space-y-0.5">
                           <li>• Choose a username to identify your profile</li>
                           <li>• Your data is securely stored</li>
                           <li>• Access from any device with your username</li>
                         </ul>
                       </div>
 
-                      <div className="flex items-center justify-center gap-2 text-sm text-gray-600 mt-3">
-                        <Lock className="w-4 h-4" />
+                      <div className="flex items-center justify-center gap-2 text-xs md:text-sm text-gray-600 mt-2 md:mt-3">
+                        <Lock className="w-3 h-3 md:w-4 md:h-4" />
                         <span>Your data is secure and private</span>
                       </div>
                     </div>
@@ -389,23 +389,23 @@ export default function LandingPage() {
                 {/* PIN Verification State */}
                 {userState === 'verifying' && (
                   <div>
-                    <div className="flex justify-center mb-4">
-                      <div className="w-16 h-16 bg-gradient-to-br from-teal-500 to-cyan-500 rounded-2xl shadow-lg flex items-center justify-center">
-                        <Lock className="w-8 h-8 text-white" />
+                    <div className="flex justify-center mb-3 md:mb-4">
+                      <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-teal-500 to-cyan-500 rounded-2xl shadow-lg flex items-center justify-center">
+                        <Lock className="w-6 h-6 md:w-8 md:h-8 text-white" />
                       </div>
                     </div>
 
-                    <h2 className="text-2xl font-bold text-center mb-2">
+                    <h2 className="text-xl md:text-2xl font-bold text-center mb-1.5 md:mb-2">
                       Welcome back, <span className="bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">@{username}</span>!
                     </h2>
-                    <p className="text-center text-gray-600 mb-4 text-sm">
+                    <p className="text-center text-gray-600 mb-3 md:mb-4 text-xs md:text-sm">
                       Enter your PIN to access your health data
                     </p>
 
-                    <div className="space-y-3">
+                    <div className="space-y-2 md:space-y-3">
                       {/* PIN Input */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1.5 md:mb-2">
                           4-6 Digit PIN
                         </label>
                         <div className="relative">
@@ -416,7 +416,7 @@ export default function LandingPage() {
                             value={pin}
                             onChange={handlePinChange}
                             onKeyPress={(e) => e.key === 'Enter' && handleVerifyPin()}
-                            className="w-full pr-10 text-base h-12 border-2 focus:border-teal-500 text-center tracking-widest text-xl font-mono"
+                            className="w-full pr-10 text-base md:text-xl h-10 md:h-12 border-2 focus:border-teal-500 text-center tracking-widest font-mono"
                             autoFocus
                             maxLength={6}
                             style={{ fontSize: '20px' }}
@@ -431,13 +431,13 @@ export default function LandingPage() {
                         </div>
 
                         {error && (
-                          <div className="mt-2 flex items-center gap-2 text-sm text-red-600 bg-red-50 p-2 rounded">
-                            <AlertTriangle className="w-4 h-4" />
+                          <div className="mt-1.5 md:mt-2 flex items-center gap-2 text-xs md:text-sm text-red-600 bg-red-50 p-2 rounded">
+                            <AlertTriangle className="w-3 h-3 md:w-4 md:h-4" />
                             <span>{error}</span>
                           </div>
                         )}
 
-                        <p className="text-xs text-gray-500 mt-2 text-center">
+                        <p className="text-[10px] md:text-xs text-gray-500 mt-1.5 md:mt-2 text-center">
                           {pin.length}/6 digits
                         </p>
                       </div>
@@ -446,17 +446,17 @@ export default function LandingPage() {
                       <Button 
                         onClick={handleVerifyPin}
                         disabled={pin.length < 4 || isVerifying}
-                        className="w-full bg-gradient-to-r from-teal-600 to-cyan-600 text-white h-12 font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full bg-gradient-to-r from-teal-600 to-cyan-600 text-white h-10 md:h-12 text-sm md:text-base font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {isVerifying ? (
                           <>
-                            <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                            <Loader2 className="w-4 h-4 md:w-5 md:h-5 mr-2 animate-spin" />
                             Verifying...
                           </>
                         ) : (
                           <>
                             Unlock Account
-                            <ArrowRight className="w-5 h-5 ml-2" />
+                            <ArrowRight className="w-4 h-4 md:w-5 md:h-5 ml-2" />
                           </>
                         )}
                       </Button>
@@ -464,7 +464,7 @@ export default function LandingPage() {
                       {/* Back Link */}
                       <button 
                         onClick={handleReset}
-                        className="w-full text-center text-sm text-gray-600 hover:text-gray-900 py-2 transition-colors"
+                        className="w-full text-center text-xs md:text-sm text-gray-600 hover:text-gray-900 py-2 transition-colors"
                       >
                         ← Try a different username
                       </button>
