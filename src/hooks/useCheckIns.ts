@@ -47,8 +47,9 @@ export function useCheckIns() {
     }
   };
 
-  const addCheckIn = (checkIn: DailyLog) => {
+  const addCheckIn = async (checkIn: DailyLog) => {
     try {
+      // Save to localStorage for immediate UI update
       const existing = JSON.parse(localStorage.getItem("dermair-checkins") || "[]");
       const updated = [checkIn, ...existing];
       
@@ -61,7 +62,18 @@ export function useCheckIns() {
       
       localStorage.setItem("dermair-checkins", JSON.stringify(recent));
       loadCheckIns(); // Refresh the state
+      
+      // Also save to Firestore
+      const userId = localStorage.getItem('dermair_userId');
+      if (userId) {
+        console.log('💾 Saving check-in to Firestore for user:', userId);
+        await saveCheckIn(userId, checkIn);
+        console.log('✅ Check-in saved to Firestore successfully');
+      } else {
+        console.warn('⚠️ No userId found, check-in only saved to localStorage');
+      }
     } catch (err) {
+      console.error('❌ Failed to save check-in:', err);
       setError("Failed to save check-in");
     }
   };
@@ -120,6 +132,7 @@ export function useCheckIns() {
     error,
     addCheckIn,
     addCheckInToFirestoreAPI,
+    loadCheckInsFromFirestore,
     getRecentCheckIns,
     getTodaysCheckIn,
     getAverageScores,

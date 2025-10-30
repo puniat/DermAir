@@ -7,6 +7,7 @@ import {
   getDoc,
   addDoc,
   getDocs,
+  updateDoc,
   query,
   where,
   orderBy,
@@ -113,17 +114,23 @@ export async function getUserSummary(userId: string): Promise<{
     try {
       // Get check-ins count (may not exist for new users)
       const checkInsRef = collection(db, 'profiles', userId, 'checkins');
+      console.log('🔍 Querying check-ins at path:', `profiles/${userId}/checkins`);
+      
       const checkInsSnapshot = await getDocs(checkInsRef);
       checkInsCount = checkInsSnapshot.size;
+      console.log('📊 Found', checkInsCount, 'check-ins');
 
       // Calculate streak days (consecutive days with check-ins)
       if (checkInsCount > 0) {
         const checkInDates = checkInsSnapshot.docs
           .map(doc => {
             const data = doc.data();
+            console.log('📅 Check-in date data:', data.date);
             return data.date?.toDate?.() || new Date(data.date);
           })
           .sort((a, b) => b.getTime() - a.getTime());
+
+        console.log('📅 Sorted check-in dates:', checkInDates.map(d => d.toISOString()));
 
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -140,9 +147,10 @@ export async function getUserSummary(userId: string): Promise<{
             break;
           }
         }
+        console.log('🔥 Calculated streak days:', streakDays);
       }
     } catch (checkInsError) {
-      console.log('⚠️ No check-ins found (new user):', checkInsError);
+      console.error('⚠️ Error loading check-ins:', checkInsError);
       // Continue with checkInsCount = 0 and streakDays = 0
     }
 
@@ -341,3 +349,27 @@ export async function loadCheckIns(profileId: string, max: number = 30): Promise
     } as DailyLog;
   });
 }
+
+export async function updateCheckIn(profileId: string, checkInId: string, updates: Partial<DailyLog>) {
+  const checkInsRef = collection(db, 'profiles', profileId, 'checkins');
+  const q = query(checkInsRef, where('id', '==', checkInId), limit(1));
+  const snap = await getDocs(q);
+  
+  if (snap.empty) {
+    throw new Error('Check-in not found');
+  }
+  
+  const docRef = snap.docs[0].ref;
+  
+  // Prepare update data
+  const updateData: Record<string, any> = {};
+  if (updates.itch_score !== undefined) updateData.itch_score = updates.itch_score;
+  if (updates.redness_score !== undefined) updateData.redness_score = updates.redness_score;
+  if (updates.medication_used !== undefined) updateData.medication_used = updates.medication_used;
+  if (updates.notes !== undefined) updateData.notes = updates.notes;
+  if (updates.photo_url !== undefined) updateData.photo_url = updates.photo_url;
+  if (updates.weather_data !== undefined) updateData.weather_data = updates.weather_data;
+  
+  await updateDoc(docRef, updateData);
+}
+

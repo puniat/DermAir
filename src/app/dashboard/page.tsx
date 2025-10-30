@@ -10,6 +10,7 @@ import { NotificationSettings } from "@/components/NotificationSettings";
 import { AnalyticsDashboard } from "@/components/AnalyticsDashboard";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { AILoadingProgress } from "@/components/AILoadingProgress";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useUserSession } from "@/hooks/useUserSession";
 import { useWeather } from "@/hooks/useWeather";
 import { useCheckIns } from "@/hooks/useCheckIns";
@@ -21,7 +22,7 @@ import type { UserProfile, DailyCheckInFormData, DailyLog, WeatherData } from "@
 import { getUserProfile } from '@/lib/services/firestore-data';
 import { Header } from "@/components/Header";
 
-export default function EnhancedDashboardPage() {
+function DashboardContent() {
   const router = useRouter();
   const { session, loading: sessionLoading, updateProfile } = useUserSession();
   
@@ -43,9 +44,17 @@ export default function EnhancedDashboardPage() {
   // AI Mode store
   const { isAIModeEnabled } = useAIModeStore();
 
-  // Weather hook
+  // Hooks - now safe to call since auth is guaranteed by wrapper
   const { data: weather, loading: weatherLoading, error: weatherError, refetch: refetchWeather } = useWeather(profile);
-  const { checkIns, loading: checkInsLoading, addCheckIn } = useCheckIns();
+  const { checkIns, loading: checkInsLoading, addCheckIn, loadCheckInsFromFirestore } = useCheckIns();
+  
+  // Load check-ins from Firestore when profile is available
+  useEffect(() => {
+    if (profile?.id) {
+      console.log('📥 [Dashboard] Loading check-ins from Firestore for user:', profile.id);
+      loadCheckInsFromFirestore(profile.id);
+    }
+  }, [profile?.id]);
   
   // Memoize the recent check-ins to prevent infinite re-renders
   const recentCheckIns = useMemo(() => checkIns.slice(0, 14), [checkIns]);
@@ -65,8 +74,8 @@ export default function EnhancedDashboardPage() {
         console.log('[Dashboard] Session loading complete:', { session, hasSession: !!session, hasProfile: !!session?.profile, userId: session?.userId });
         
         if (!session) {
-          console.log('[Dashboard] No session found, redirecting to onboarding');
-          router.push('/onboarding');
+          console.log('[Dashboard] No session found, redirecting to landing page');
+          router.push('/landing');
           return;
         }
         
@@ -80,14 +89,18 @@ export default function EnhancedDashboardPage() {
             updateProfile(firebaseProfile);
           } else {
             console.log('[Dashboard] ❌ No profile found in Firebase for userId:', session.userId);
-            setProfile(null);
+            // No profile found, redirect to landing for authentication
+            console.log('[Dashboard] No profile in Firebase, redirecting to landing page');
+            router.push('/landing');
+            return;
           }
         } else if (session.profile) {
           console.log('[Dashboard] Profile already in session:', { id: session.profile.id, username: session.profile.username });
           setProfile(session.profile);
         } else {
-          console.log('[Dashboard] No profile and no userId');
-          setProfile(null);
+          console.log('[Dashboard] No profile and no userId, redirecting to landing page');
+          router.push('/landing');
+          return;
         }
         
         setLoading(false);
@@ -156,7 +169,7 @@ export default function EnhancedDashboardPage() {
         created_at: new Date()
       };
       
-      addCheckIn(dailyLog);
+      await addCheckIn(dailyLog);
       setShowCheckIn(false);
       toast.success("Check-in recorded successfully!");
       
@@ -277,5 +290,13 @@ export default function EnhancedDashboardPage() {
         </div>
       )}
     </div>
+  );
+}
+// Wrap with authentication protection
+export default function EnhancedDashboardPage() {
+  return (
+    <ProtectedRoute requireAuth={true} redirectTo="/landing">
+      <DashboardContent />
+    </ProtectedRoute>
   );
 }

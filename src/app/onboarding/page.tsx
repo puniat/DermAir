@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Logo } from "@/components/Logo";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useUserSession } from "@/hooks/useUserSession";
 import type { UserProfile } from "@/types";
 import { saveUserProfile, checkUsernameExists, checkEmailExists, getUserByUsername } from '@/lib/services/firestore-data';
@@ -34,7 +35,7 @@ const RISK_THRESHOLDS = [
   { value: "high" as const, label: "High", emoji: "⚠️" }
 ];
 
-export default function OnboardingPage() {
+function OnboardingContent() {
   const router = useRouter();
   const { session, updateProfile: updateSessionProfile, initializeSession } = useUserSession();
   
@@ -832,5 +833,14 @@ export default function OnboardingPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+// Wrap with authentication protection
+export default function OnboardingPage() {
+  return (
+    <ProtectedRoute requireAuth={true} redirectTo="/landing">
+      <OnboardingContent />
+    </ProtectedRoute>
   );
 }

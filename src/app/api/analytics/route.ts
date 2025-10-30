@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/database';
+import { loadCheckIns } from '@/lib/services/firestore-data';
 
 export async function GET(request: NextRequest) {
   try {
@@ -11,10 +11,26 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
     }
 
-    const trends = await db.getSymptomTrends(userId, days);
+    // Get recent daily logs from Firestore
+    const recentLogs = await loadCheckIns(userId, days);
     
-    // Get recent daily logs for more detailed analysis
-    const recentLogs = await db.getDailyLogs(userId, days);
+    // Calculate trends
+    const totalLogs = recentLogs.length;
+    const avgItch = totalLogs > 0 
+      ? recentLogs.reduce((sum, log) => sum + log.itch_score, 0) / totalLogs 
+      : 0;
+    const avgRedness = totalLogs > 0 
+      ? recentLogs.reduce((sum, log) => sum + log.redness_score, 0) / totalLogs 
+      : 0;
+    const medicationDays = recentLogs.filter(log => log.medication_used).length;
+    
+    const trends = {
+      avgItch: Math.round(avgItch * 10) / 10,
+      avgRedness: Math.round(avgRedness * 10) / 10,
+      totalLogs,
+      medicationDays,
+      medicationRate: totalLogs > 0 ? Math.round((medicationDays / totalLogs) * 100) : 0
+    };
     
     // Calculate additional insights
     const weeklyData = [];
@@ -113,7 +129,7 @@ export async function GET(request: NextRequest) {
     const analytics = {
       overview: {
         ...trends,
-        medicationUsageRate: trends.totalDays > 0 ? Math.round((trends.medicationDays / trends.totalDays) * 100) : 0
+        medicationUsageRate: trends.medicationRate
       },
       weeklyTrends: weeklyData.reverse(), // Show most recent first
       weatherCorrelations: correlationPercentages,

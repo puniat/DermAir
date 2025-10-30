@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/database';
+import { getUserProfile, saveUserProfile } from '@/lib/services/firestore-data';
 import type { UserProfile } from '@/types';
 
 export async function GET(request: NextRequest) {
@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
     }
 
-    const user = await db.getUserById(userId);
+    const user = await getUserProfile(userId);
     
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
@@ -34,12 +34,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user already exists
-    const existingUser = await db.getUserById(profile.id);
+    const existingUser = await getUserProfile(profile.id);
     if (existingUser) {
       return NextResponse.json({ error: 'User already exists' }, { status: 409 });
     }
 
-    const user = await db.createUser(profile);
+    await saveUserProfile(profile);
+    const user = await getUserProfile(profile.id);
     return NextResponse.json({ success: true, data: user }, { status: 201 });
   } catch (error) {
     console.error('Error creating user:', error);
@@ -56,10 +57,18 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
     }
 
-    await db.updateUser(userId, updates);
-    const updatedUser = await db.getUserById(userId);
+    // Get existing profile
+    const existingProfile = await getUserProfile(userId);
+    if (!existingProfile) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    // Merge updates with existing profile
+    const updatedProfile = { ...existingProfile, ...updates };
+    await saveUserProfile(updatedProfile);
     
-    return NextResponse.json({ success: true, data: updatedUser });
+    const user = await getUserProfile(userId);
+    return NextResponse.json({ success: true, data: user });
   } catch (error) {
     console.error('Error updating user:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

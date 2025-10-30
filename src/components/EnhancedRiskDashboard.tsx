@@ -52,6 +52,7 @@ export function EnhancedRiskDashboard({
   onTabChange 
 }: EnhancedRiskDashboardProps) {
   const [activeTab, setActiveTab] = useState(defaultTab);
+  const [showAllFactors, setShowAllFactors] = useState(false);
   
   // Update active tab when defaultTab prop changes
   useEffect(() => {
@@ -226,55 +227,100 @@ export function EnhancedRiskDashboard({
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {riskAssessment.advancedAssessment.factors.slice(0, 6).map((factor, index) => {
-                    const impactLevel = getImpactLevel(factor.impact);
-                    const categoryStyle = getCategoryStyle(factor.category);
+                {(() => {
+                  // Sort factors: Clinical and high-impact first
+                  const sortedFactors = [...riskAssessment.advancedAssessment.factors].sort((a, b) => {
+                    // Priority 1: Clinical category comes first (personalized/critical factors)
+                    if (a.category === 'clinical' && b.category !== 'clinical') return -1;
+                    if (a.category !== 'clinical' && b.category === 'clinical') return 1;
                     
-                    return (
-                      <div 
-                        key={index} 
-                        className={`relative overflow-hidden rounded-xl border-2 ${impactLevel.borderColor} bg-white hover:shadow-lg transition-all group`}
-                      >
-                        {/* Gradient Background Accent */}
-                        <div className={`absolute top-0 right-0 w-32 h-32 ${impactLevel.gradient} opacity-10 blur-2xl group-hover:opacity-20 transition-opacity`}></div>
-                        
-                        {/* Content */}
-                        <div className="relative p-4">
-                          {/* Header Row */}
-                          <div className="flex items-start justify-between mb-3">
-                            <div className="flex items-center gap-2">
-                              <div className={`${categoryStyle.bg} ${categoryStyle.text} p-2 rounded-lg`}>
-                                {categoryStyle.icon}
+                    // Priority 2: Higher impact comes first
+                    return b.impact - a.impact;
+                  });
+                  
+                  const displayedFactors = showAllFactors ? sortedFactors : sortedFactors.slice(0, 6);
+                  
+                  return (
+                    <>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {displayedFactors.map((factor, index) => {
+                          const impactLevel = getImpactLevel(factor.impact);
+                          const categoryStyle = getCategoryStyle(factor.category);
+                          
+                          return (
+                            <div 
+                              key={index} 
+                              className={`relative overflow-hidden rounded-xl border border-gray-200 bg-white hover:shadow-lg transition-all group`}
+                            >
+                              {/* Gradient Background Accent */}
+                              <div className={`absolute top-0 right-0 w-32 h-32 ${impactLevel.gradient} opacity-10 blur-2xl group-hover:opacity-20 transition-opacity`}></div>
+                              
+                              {/* Content */}
+                              <div className="relative p-4">
+                                {/* Header Row */}
+                                <div className="flex items-start justify-between mb-3">
+                                  <div className="flex items-center gap-2">
+                                    <div className={`${categoryStyle.bg} ${categoryStyle.text} p-2 rounded-lg`}>
+                                      {categoryStyle.icon}
+                                    </div>
+                                    <Badge className={`${categoryStyle.badgeBg} ${categoryStyle.badgeText} text-[10px] px-2 py-0.5`}>
+                                      {factor.category}
+                                    </Badge>
+                                  </div>
+                                  
+                                  {/* Impact Badge */}
+                                  <div className={`${impactLevel.bg} ${impactLevel.text} px-3 py-1 rounded-full font-bold text-lg shadow-sm`}>
+                                    {factor.impact}
+                                  </div>
+                                </div>
+                                
+                                {/* Factor Name */}
+                                <h4 className="font-bold text-sm text-gray-800 mb-2 leading-tight">
+                                  {factor.name}
+                                </h4>
+                                
+                                {/* Description */}
+                                <p className="text-xs text-gray-600 leading-relaxed line-clamp-2">
+                                  {factor.description}
+                                </p>
+                                
+                                {/* Bottom Accent Line */}
+                                <div className={`absolute bottom-0 left-0 right-0 h-1.5 ${impactLevel.gradient}`}></div>
                               </div>
-                              <Badge className={`${categoryStyle.badgeBg} ${categoryStyle.badgeText} text-[10px] px-2 py-0.5`}>
-                                {factor.category}
-                              </Badge>
                             </div>
-                            
-                            {/* Impact Badge */}
-                            <div className={`${impactLevel.bg} ${impactLevel.text} px-3 py-1 rounded-full font-bold text-lg shadow-sm`}>
-                              {factor.impact}
-                            </div>
-                          </div>
-                          
-                          {/* Factor Name */}
-                          <h4 className="font-bold text-sm text-gray-800 mb-2 leading-tight">
-                            {factor.name}
-                          </h4>
-                          
-                          {/* Description */}
-                          <p className="text-xs text-gray-600 leading-relaxed line-clamp-2">
-                            {factor.description}
-                          </p>
-                          
-                          {/* Bottom Accent Line */}
-                          <div className={`absolute bottom-0 left-0 right-0 h-1 ${impactLevel.gradient}`}></div>
-                        </div>
+                          );
+                        })}
                       </div>
-                    );
-                  })}
-                </div>
+                      
+                      {/* Show More/Less Button */}
+                      {sortedFactors.length > 6 && (
+                        <div className="mt-6 text-center">
+                          <Button
+                            variant="outline"
+                            onClick={() => setShowAllFactors(!showAllFactors)}
+                            className="px-6"
+                          >
+                            {showAllFactors ? (
+                              <>
+                                Show Less
+                                <svg className="ml-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                                </svg>
+                              </>
+                            ) : (
+                              <>
+                                Show {sortedFactors.length - 6} More Factors
+                                <svg className="ml-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
               </CardContent>
             </Card>
           )}
@@ -404,134 +450,44 @@ export function EnhancedRiskDashboard({
           </div>
         </TabsContent>
 
-        <TabsContent value="treatment" className="space-y-6">
+        <TabsContent value="treatment" className="space-y-4">
           {riskAssessment.treatmentPlan ? (
             <>
-              {/* Treatment Phase Hero Card */}
-              <Card className="border-l-4 border-l-purple-500 bg-gradient-to-r from-purple-50 to-transparent">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Target className="h-5 w-5 text-purple-600" />
-                    Personalized Treatment Plan
-                  </CardTitle>
-                  <CardDescription>
-                    Comprehensive plan based on your current condition and goals
+              {/* Compact Combined Header - Phase + Goals in Single Card */}
+              <Card className="border-t-4 border-t-purple-500">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Target className="h-4 w-4 text-purple-600" />
+                      Treatment Plan Overview
+                    </CardTitle>
+                    <div className="flex items-center gap-2 bg-purple-100 px-3 py-1.5 rounded-full">
+                      <Calendar className="h-4 w-4 text-purple-700" />
+                      <div className="text-sm font-bold text-purple-900 uppercase">
+                        {riskAssessment.treatmentPlan.phase}
+                      </div>
+                    </div>
+                  </div>
+                  <CardDescription className="text-xs mt-1">
+                    {riskAssessment.treatmentPlan.duration}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex items-center gap-6">
-                    <div className="bg-purple-600 text-white rounded-2xl p-6 text-center min-w-[180px]">
-                      <Calendar className="h-8 w-8 mx-auto mb-2" />
-                      <div className="text-3xl font-bold">{riskAssessment.treatmentPlan.phase.toUpperCase()}</div>
-                      <div className="text-sm opacity-90 mt-1">Current Phase</div>
+                  <div className="space-y-2">
+                    <div className="text-xs font-semibold text-gray-700 mb-2 flex items-center gap-1.5">
+                      <CheckCircle className="h-3.5 w-3.5 text-green-600" />
+                      Your Goals
                     </div>
-                    <div className="flex-1">
-                      <div className="text-sm text-muted-foreground mb-2">Duration</div>
-                      <div className="text-xl font-semibold">{riskAssessment.treatmentPlan.duration}</div>
-                      <Progress value={30} className="mt-3 h-2 [&>div]:bg-purple-500" />
-                      <div className="text-xs text-muted-foreground mt-1">Treatment progress</div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Treatment Goals - Visual Grid */}
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <Target className="h-5 w-5 text-green-600" />
-                    Treatment Goals
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid md:grid-cols-2 gap-4">
-                    {riskAssessment.treatmentPlan.goals.map((goal, index) => (
-                      <div 
-                        key={index} 
-                        className="flex items-start gap-3 p-4 rounded-lg border-l-4 border-l-green-500 bg-green-50/50 hover:bg-green-50 transition-colors"
-                      >
-                        <div className="bg-green-500 text-white rounded-full p-2 mt-0.5">
-                          <CheckCircle className="h-4 w-4" />
-                        </div>
-                        <div className="flex-1">
-                          <div className="font-medium text-sm">{goal}</div>
-                          <div className="text-xs text-muted-foreground mt-1">Goal {index + 1}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Monitoring Protocol - Dashboard Style */}
-              <Card className="border-l-4 border-l-blue-500">
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <Activity className="h-5 w-5 text-blue-600" />
-                    Monitoring Protocol
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {/* Frequency & Metrics */}
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div className="p-4 bg-blue-50 rounded-lg">
-                      <div className="flex items-center gap-2 text-blue-700 mb-2">
-                        <Clock className="h-4 w-4" />
-                        <span className="font-semibold text-sm">Frequency</span>
-                      </div>
-                      <div className="text-lg font-bold text-blue-900">
-                        {riskAssessment.treatmentPlan.monitoring.frequency}
-                      </div>
-                    </div>
-                    <div className="p-4 bg-blue-50 rounded-lg">
-                      <div className="flex items-center gap-2 text-blue-700 mb-2">
-                        <Eye className="h-4 w-4" />
-                        <span className="font-semibold text-sm">Key Metrics</span>
-                      </div>
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {riskAssessment.treatmentPlan.monitoring.metrics.map((metric, idx) => (
-                          <div key={idx} className="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-full border border-blue-200">
-                            {getMetricIcon(metric)}
-                            <span className="text-xs font-medium text-blue-900">
-                              {formatMetricName(metric)}
-                            </span>
+                    <div className="grid md:grid-cols-3 gap-2">
+                      {riskAssessment.treatmentPlan.goals.slice(0, 3).map((goal, index) => (
+                        <div 
+                          key={index} 
+                          className="flex items-start gap-2 p-2.5 rounded-lg bg-green-50 border border-green-200 hover:bg-green-100 transition-colors"
+                        >
+                          <div className="w-5 h-5 rounded-full bg-green-500 text-white flex items-center justify-center flex-shrink-0 text-xs font-bold">
+                            {index + 1}
                           </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Thresholds - Visual Cards */}
-                  <div>
-                    <h4 className="text-sm font-semibold mb-3 text-gray-700">Alert Thresholds</h4>
-                    <div className="grid md:grid-cols-3 gap-3">
-                      {riskAssessment.treatmentPlan.monitoring.thresholds.map((threshold, index) => (
-                        <div key={index} className="relative overflow-hidden rounded-lg border-2 border-gray-200 bg-white hover:shadow-lg transition-shadow">
-                          <div className="p-4">
-                            <div className="flex items-center gap-2 mb-3">
-                              {getMetricIcon(threshold.metric)}
-                              <div className="font-semibold text-sm text-gray-800">
-                                {formatMetricName(threshold.metric)}
-                              </div>
-                            </div>
-                            <div className="space-y-2">
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                  <div className="w-3 h-3 rounded-full bg-yellow-400 shadow-sm"></div>
-                                  <span className="text-xs font-medium text-gray-600">Warning</span>
-                                </div>
-                                <span className="font-bold text-sm text-yellow-700">{threshold.warning}</span>
-                              </div>
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                  <div className="w-3 h-3 rounded-full bg-red-500 shadow-sm"></div>
-                                  <span className="text-xs font-medium text-gray-600">Critical</span>
-                                </div>
-                                <span className="font-bold text-sm text-red-700">{threshold.critical}</span>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-blue-100 to-transparent opacity-40 rounded-bl-full"></div>
+                          <span className="text-xs text-gray-700 leading-tight">{goal}</span>
                         </div>
                       ))}
                     </div>
@@ -539,47 +495,135 @@ export function EnhancedRiskDashboard({
                 </CardContent>
               </Card>
 
-              {/* Plan Adjustments - Action Cards */}
+              {/* Daily Monitoring - Horizontal Layout */}
+              <div className="grid md:grid-cols-2 gap-4">
+                <Card className="border-l-4 border-l-blue-500">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Activity className="h-4 w-4 text-blue-600" />
+                      Daily Check-In Guide
+                    </CardTitle>
+                    <CardDescription className="text-xs">
+                      Track {riskAssessment.treatmentPlan.monitoring.frequency.toLowerCase()}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 gap-2">
+                      {riskAssessment.treatmentPlan.monitoring.metrics.map((metric, idx) => (
+                        <div 
+                          key={idx} 
+                          className="flex items-center gap-2 bg-blue-50 hover:bg-blue-100 px-2.5 py-2 rounded-lg border border-blue-200 transition-colors"
+                        >
+                          <div className="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
+                            {getMetricIcon(metric)}
+                          </div>
+                          <span className="text-xs font-medium text-blue-900 leading-tight">
+                            {formatMetricName(metric)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Alert Thresholds - Compact Side by Side */}
+                <Card className="border-l-4 border-l-gray-300">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Eye className="h-4 w-4 text-gray-600" />
+                      Symptom Alert Levels
+                    </CardTitle>
+                    <CardDescription className="text-xs">
+                      When to seek help
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {riskAssessment.treatmentPlan.monitoring.thresholds.map((threshold, index) => (
+                        <div key={index} className="flex items-center justify-between gap-2 p-2 bg-gray-50 rounded-lg border border-gray-200">
+                          <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                            <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+                              {getMetricIcon(threshold.metric)}
+                            </div>
+                            <span className="text-xs font-medium text-gray-800 truncate">
+                              {formatMetricName(threshold.metric)}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <div className="flex items-center gap-1 bg-yellow-100 px-2 py-1 rounded">
+                              <div className="w-1.5 h-1.5 rounded-full bg-yellow-500"></div>
+                              <span className="text-xs font-bold text-yellow-700">{threshold.warning}</span>
+                            </div>
+                            <div className="flex items-center gap-1 bg-red-100 px-2 py-1 rounded">
+                              <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>
+                              <span className="text-xs font-bold text-red-700">{threshold.critical}</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Action Triggers - Compact List */}
               <Card className="border-l-4 border-l-orange-500">
                 <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <Zap className="h-5 w-5 text-orange-600" />
-                    Plan Adjustments
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4 text-orange-600" />
+                    When to Adjust Your Routine
                   </CardTitle>
-                  <CardDescription>Automatic protocol changes based on symptoms</CardDescription>
+                  <CardDescription className="text-xs">
+                    Take action if you notice these changes
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     {riskAssessment.treatmentPlan.adjustments.map((adjustment, index) => (
                       <div 
                         key={index} 
-                        className="group relative overflow-hidden rounded-lg border border-gray-200 bg-gradient-to-r from-orange-50 to-white hover:shadow-md transition-all"
+                        className="flex items-center gap-2.5 p-2.5 rounded-lg bg-gradient-to-r from-orange-50 to-white border border-orange-200 hover:border-orange-300 transition-colors"
                       >
-                        <div className="flex items-center justify-between p-4">
-                          <div className="flex items-center gap-3 flex-1">
-                            <div className="bg-orange-100 text-orange-600 rounded-full p-2 group-hover:bg-orange-500 group-hover:text-white transition-colors">
-                              <AlertTriangle className="h-4 w-4" />
-                            </div>
-                            <div className="flex-1">
-                              <div className="font-medium text-sm text-gray-800">{adjustment.condition}</div>
-                            </div>
-                          </div>
-                          <Badge className="bg-orange-500 text-white hover:bg-orange-600 px-4 py-1">
-                            {adjustment.action}
-                          </Badge>
+                        <div className="flex-shrink-0 w-6 h-6 rounded-full bg-orange-500 text-white flex items-center justify-center">
+                          <span className="text-xs font-bold">!</span>
                         </div>
-                        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-400 to-orange-600 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></div>
+                        <div className="flex-1 min-w-0">
+                          <span className="text-xs text-gray-700">
+                            <span className="font-semibold text-gray-900">If:</span> {adjustment.condition}
+                            {' '}→{' '}
+                            <span className="font-semibold text-orange-700">{adjustment.action}</span>
+                          </span>
+                        </div>
                       </div>
                     ))}
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Quick Tip - More Compact */}
+              <Alert className="border-l-4 border-l-purple-500 bg-purple-50 py-3">
+                <div className="flex items-start gap-2">
+                  <Lightbulb className="h-4 w-4 text-purple-600 mt-0.5 flex-shrink-0" />
+                  <AlertDescription className="text-xs text-gray-700">
+                    <strong>Quick Tip:</strong> Use the Daily Check-In button to track these metrics. 
+                    AI will automatically adjust recommendations based on your progress.
+                  </AlertDescription>
+                </div>
+              </Alert>
             </>
           ) : (
             <Card>
               <CardContent className="pt-6">
-                <div className="text-center text-muted-foreground">
-                  Treatment plan generation in progress...
+                <div className="text-center py-8">
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-purple-100 mb-4">
+                    <Target className="h-8 w-8 text-purple-600 animate-pulse" />
+                  </div>
+                  <div className="text-lg font-semibold text-gray-700 mb-2">
+                    Generating Your Treatment Plan
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    AI is analyzing your data to create personalized recommendations...
+                  </div>
                 </div>
               </CardContent>
             </Card>

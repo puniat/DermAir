@@ -143,11 +143,23 @@ export default function LandingPage() {
       const isValid = await verifyPin(pin, userProfile.pin);
       
       if (isValid) {
+        console.log('[Landing] PIN verified successfully');
+        
         try {
-          const summary = await getUserSummary(userProfile.id);
-          if (summary) {
+          console.log('[Landing] Fetching user summary for ID:', userProfile.id);
+          
+          // Fetch user summary from SQLite API
+          const response = await fetch(`/api/user-summary?userId=${encodeURIComponent(userProfile.id)}`);
+          const result = await response.json();
+          
+          console.log('[Landing] API response:', result);
+          
+          if (result.success && result.data) {
+            const summary = result.data;
+            console.log('[Landing] Setting user summary with check-ins:', summary.checkInsCount, 'streak:', summary.streakDays);
             setUserSummary(summary);
           } else {
+            console.warn('[Landing] API returned no data, using defaults');
             setUserSummary({
               username: userProfile.username || username,
               displayName: userProfile.username || username,
@@ -158,7 +170,7 @@ export default function LandingPage() {
             });
           }
         } catch (summaryError) {
-          console.error('Error fetching summary:', summaryError);
+          console.error('[Landing] Error fetching summary:', summaryError);
           setUserSummary({
             username: userProfile.username || username,
             displayName: userProfile.username || username,

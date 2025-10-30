@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/database';
+import { loadCheckIns } from '@/lib/services/firestore-data';
 import type { DailyLog, DailyCheckInFormData } from '@/types';
 
 export async function GET(request: NextRequest) {
@@ -13,14 +13,22 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
     }
 
+    // Get recent logs from Firestore
+    const logs = await loadCheckIns(userId, days);
+    
     if (date) {
-      // Get specific date
+      // Filter for specific date
       const specificDate = new Date(date);
-      const log = await db.getDailyLogByDate(userId, specificDate);
-      return NextResponse.json({ success: true, data: log });
+      specificDate.setHours(0, 0, 0, 0);
+      
+      const log = logs.find(l => {
+        const logDate = new Date(l.date);
+        logDate.setHours(0, 0, 0, 0);
+        return logDate.getTime() === specificDate.getTime();
+      });
+      
+      return NextResponse.json({ success: true, data: log || null });
     } else {
-      // Get recent logs
-      const logs = await db.getDailyLogs(userId, days);
       return NextResponse.json({ success: true, data: logs });
     }
   } catch (error) {
@@ -39,7 +47,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create daily log
-    const dailyLog: Omit<DailyLog, 'created_at'> = {
+    const dailyLog: DailyLog = {
       id: `checkin_${userId}_${Date.now()}`,
       user_id: userId,
       date: new Date(),
@@ -48,11 +56,14 @@ export async function POST(request: NextRequest) {
       medication_used: checkInData.medication_used,
       notes: checkInData.notes || '',
       photo_url: checkInData.photo_url || undefined,
-      weather_data: weatherData || {}
+      weather_data: weatherData || {},
+      created_at: new Date()
     };
 
-    const createdLog = await db.createDailyLog(dailyLog);
-    return NextResponse.json({ success: true, data: createdLog }, { status: 201 });
+    const { saveCheckIn } = await import('@/lib/services/firestore-data');
+    await saveCheckIn(userId, dailyLog);
+    
+    return NextResponse.json({ success: true, data: dailyLog }, { status: 201 });
   } catch (error) {
     console.error('Error creating daily log:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -62,13 +73,15 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
-    const { logId, updates } = body;
+    const { userId, logId, updates } = body;
 
-    if (!logId || !updates) {
-      return NextResponse.json({ error: 'Log ID and updates are required' }, { status: 400 });
+    if (!userId || !logId || !updates) {
+      return NextResponse.json({ error: 'User ID, Log ID and updates are required' }, { status: 400 });
     }
 
-    await db.updateDailyLog(logId, updates);
+    const { updateCheckIn } = await import('@/lib/services/firestore-data');
+    await updateCheckIn(userId, logId, updates);
+    
     return NextResponse.json({ success: true, message: 'Daily log updated successfully' });
   } catch (error) {
     console.error('Error updating daily log:', error);
