@@ -80,20 +80,20 @@ export function EnhancedRiskDashboard({
   return (
     <div className={`space-y-6 ${className}`} id="enhanced-risk-dashboard">
       <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 gap-1">
-          <TabsTrigger value="overview" className="text-xs sm:text-sm px-2">
+        <TabsList className="inline-flex h-auto w-full justify-start overflow-x-auto md:grid md:grid-cols-4 md:gap-1">
+          <TabsTrigger value="overview" className="text-xs sm:text-sm px-3 py-2 whitespace-nowrap flex-shrink-0">
             <span className="hidden sm:inline">Overview</span>
             <span className="sm:hidden">Home</span>
           </TabsTrigger>
-          <TabsTrigger value="recommendations" className="text-xs sm:text-sm px-2">
+          <TabsTrigger value="recommendations" className="text-xs sm:text-sm px-3 py-2 whitespace-nowrap flex-shrink-0">
             <span className="hidden sm:inline">AI Recommendations</span>
             <span className="sm:hidden">AI Tips</span>
           </TabsTrigger>
-          <TabsTrigger value="treatment" className="text-xs sm:text-sm px-2">
+          <TabsTrigger value="treatment" className="text-xs sm:text-sm px-3 py-2 whitespace-nowrap flex-shrink-0">
             <span className="hidden sm:inline">Treatment Plan</span>
             <span className="sm:hidden">Treatment</span>
           </TabsTrigger>
-          <TabsTrigger value="insights" className="text-xs sm:text-sm px-2">
+          <TabsTrigger value="insights" className="text-xs sm:text-sm px-3 py-2 whitespace-nowrap flex-shrink-0">
             <span className="hidden sm:inline">Advanced Insights</span>
             <span className="sm:hidden">Insights</span>
           </TabsTrigger>
