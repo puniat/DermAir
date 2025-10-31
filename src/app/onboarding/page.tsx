@@ -41,20 +41,13 @@ function OnboardingContent() {
   
   // Debug: Check environment on mount
   useEffect(() => {
-    console.log('[Onboarding] Component mounted');
-    console.log('[Onboarding] Environment check:', {
-      hasApiKey: !!process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY,
-      apiKeyLength: process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY?.length || 0,
-      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'SSR',
-      platform: typeof navigator !== 'undefined' ? navigator.platform : 'SSR'
-    });
+
     
     // Check for username parameter from welcome page
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
       const usernameParam = urlParams.get('username');
       if (usernameParam) {
-        console.log('[Onboarding] Username from welcome page:', usernameParam);
         setUsername(usernameParam);
         setUsernameAvailable(true); // Already verified on welcome page
       }
@@ -72,7 +65,7 @@ function OnboardingContent() {
   const [emailAvailable, setEmailAvailable] = useState<boolean | null>(null);
   const [emailValid, setEmailValid] = useState<boolean | null>(null);
   
-  // PIN for security (required for new users)
+  // PIN for security
   const [pin, setPin] = useState("");
   const [confirmPin, setConfirmPin] = useState("");
   
@@ -161,15 +154,12 @@ function OnboardingContent() {
   }, [email]);
 
   const getCurrentLocationHandler = async () => {
-    console.log('[Onboarding] Getting current location...');
     setIsLoadingLocation(true);
     try {
       const location = await getCurrentLocation();
-      console.log('[Onboarding] Got coordinates:', location);
       
       const { latitude, longitude } = location;
       const locationInfo = await reverseGeocode(latitude, longitude);
-      console.log('[Onboarding] Reverse geocode result:', locationInfo);
       
       setZipcode("");
       setCountry(locationInfo.country);
@@ -181,9 +171,7 @@ function OnboardingContent() {
         longitude,
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
       });
-      console.log('[Onboarding] Location data set successfully');
     } catch (error) {
-      console.error("[Onboarding] Error getting location:", error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       alert(`Could not get your location: ${errorMessage}\n\nPlease enter your zipcode manually.`);
     } finally {
@@ -224,7 +212,7 @@ function OnboardingContent() {
         return;
       }
 
-      // Validate PIN (required for security)
+      // Validate PIN
       if (!pin.trim() || !confirmPin.trim()) {
         alert("Please create a 4-6 digit PIN to secure your account");
         return;
@@ -248,7 +236,6 @@ function OnboardingContent() {
         }
 
         // Check if email is already taken
-        console.log('[Onboarding] Checking if email exists:', email.trim());
         const emailExists = await checkEmailExists(email.trim());
         
         if (emailExists) {
@@ -258,21 +245,17 @@ function OnboardingContent() {
       }
 
       // Check if username is already taken
-      console.log('[Onboarding] Checking if username exists:', username.trim());
       const usernameExists = await checkUsernameExists(username.trim());
       
       if (usernameExists) {
         // Username exists - try to load existing profile
-        console.log('[Onboarding] Username exists, loading existing profile');
         const existingProfile = await getUserByUsername(username.trim());
         
         if (existingProfile) {
-          console.log('[Onboarding] Existing profile loaded:', existingProfile.id);
           
           // CRITICAL: Store userId in localStorage BEFORE any other operations
           if (typeof window !== 'undefined') {
             localStorage.setItem('dermair_userId', existingProfile.id);
-            console.log('[Onboarding] Stored existing userId in localStorage:', existingProfile.id);
           }
           
           // Initialize session with existing user data
@@ -306,9 +289,7 @@ function OnboardingContent() {
       if (!finalLocationData && zipcode.trim()) {
         setIsLoadingLocation(true);
         try {
-          console.log('[Onboarding] Validating zipcode:', zipcode.trim(), country);
           const locationInfo = await getLocationByZipcode(zipcode.trim(), country);
-          console.log('[Onboarding] Zipcode validation success:', locationInfo);
           
           finalLocationData = {
             city: locationInfo.name,
@@ -357,7 +338,6 @@ function OnboardingContent() {
 
       // Hash the PIN for security
       const hashedPin = await hashPin(pin);
-      console.log('[Onboarding] PIN hashed successfully, length:', hashedPin.length);
 
       const completeProfile: UserProfile = {
         id: userId,  // Use username as userId
@@ -372,21 +352,19 @@ function OnboardingContent() {
         created_at: new Date()
       };
 
-      console.log('[Onboarding] Saving NEW profile to Firebase:', {
-        userId: completeProfile.id,
-        hasPIN: !!completeProfile.pin,
-        pinLength: completeProfile.pin?.length || 0
-      });
+      // console.log('[Onboarding] Saving NEW profile to Firebase:', {
+      //   userId: completeProfile.id,
+      //   hasPIN: !!completeProfile.pin,
+      //   pinLength: completeProfile.pin?.length || 0
+      // });
       
       // CRITICAL: Store username (userId) in localStorage BEFORE saving and redirecting
       if (typeof window !== 'undefined') {
         localStorage.setItem('dermair_userId', userId);
-        console.log('[Onboarding] Stored username as userId in localStorage:', userId);
       }
       
       updateSessionProfile(completeProfile);
       await saveUserProfile(completeProfile);
-      console.log('[Onboarding] Profile saved successfully, redirecting to dashboard');
       router.push("/dashboard");
     } catch (error) {
       console.error("[Onboarding] Error completing onboarding:", error);

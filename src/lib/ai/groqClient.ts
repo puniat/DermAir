@@ -71,11 +71,6 @@ class GroqAIService {
       throw new Error('Groq API key not configured');
     }
 
-    console.log('[Groq AI] Starting risk analysis...');
-    console.log('[Groq AI] Weather:', input.weather);
-    console.log('[Groq AI] User profile:', input.userProfile);
-    console.log('[Groq AI] Recent check-ins:', input.recentCheckIns.length);
-
     const prompt = this.buildPrompt(input);
 
     try {
@@ -99,7 +94,6 @@ Always respond with valid JSON only, no markdown or explanations.`
       });
 
       const responseText = completion.choices[0]?.message?.content;
-      console.log('[Groq AI] Raw response:', responseText);
 
       if (!responseText) {
         throw new Error('Empty response from Groq');
@@ -111,17 +105,10 @@ Always respond with valid JSON only, no markdown or explanations.`
       // Validate and normalize the response
       const validated = this.validateAndNormalizeResponse(analysis);
       
-      console.log('[Groq AI] ✅ Analysis complete:', {
-        riskScore: validated.riskScore,
-        riskLevel: validated.riskLevel,
-        factorsCount: validated.factors.length,
-        recommendationsCount: validated.recommendations.length
-      });
-
-      return validated;
+       return validated;
 
     } catch (error: any) {
-      console.error('[Groq AI] ❌ Error:', error);
+      console.error('[Groq AI] Error:', error);
       console.error('[Groq AI] Error details:', {
         message: error.message,
         status: error.status,

@@ -67,40 +67,33 @@ class DataCollectionService {
   private isCollecting = false;
 
   async initializeDataCollection(): Promise<void> {
-    console.log('🔄 Initializing data collection service...');
     
     // Check for existing cached data
     const cachedData = localStorage.getItem('dermair-training-data');
     if (cachedData) {
       try {
         this.trainingData = JSON.parse(cachedData);
-        console.log(`✅ Loaded ${this.trainingData.length} cached training samples`);
       } catch (error) {
-        console.error('❌ Failed to load cached training data:', error);
+        console.error(' Failed to load cached training data:', error);
       }
     }
   }
 
   async collectDataFromSources(maxSamplesPerSource = 100): Promise<void> {
     if (this.isCollecting) {
-      console.log('⚠️ Data collection already in progress');
       return;
     }
 
     this.isCollecting = true;
-    console.log('🔄 Starting data collection from multiple sources...');
-    console.log('ℹ️ Using synthetic demo data - configure real data sources for production use');
 
     try {
       for (const dataset of this.datasets) {
-        console.log(`📥 Collecting from ${dataset.name}...`);
         
         try {
           const samples = await this.collectFromDataset(dataset, maxSamplesPerSource);
           this.trainingData.push(...samples);
-          console.log(`✅ Collected ${samples.length} samples from ${dataset.name}`);
         } catch (error) {
-          console.error(`❌ Failed to collect from ${dataset.name}:`, error);
+          console.error(` Failed to collect from ${dataset.name}:`, error);
         }
         
         // Add delay between requests to be respectful
@@ -109,10 +102,9 @@ class DataCollectionService {
 
       // Cache the collected data
       await this.cacheTrainingData();
-      console.log(`✅ Data collection complete: ${this.trainingData.length} total samples`);
       
     } catch (error) {
-      console.error('❌ Data collection failed:', error);
+      console.error(' Data collection failed:', error);
     } finally {
       this.isCollecting = false;
     }
@@ -132,23 +124,13 @@ class DataCollectionService {
   }
 
   private async collectFromAPI(dataset: DatasetSource, maxSamples: number): Promise<SkinImageData[]> {
-    // For demo purposes, we'll use synthetic data instead of real API calls
-    // Real API integration would require proper authentication and configuration
-    console.log(`🔄 Collecting data from ${dataset.name} API (using synthetic data for demo)`);
     
-    // Skip real API calls and generate synthetic data immediately
-    // This prevents network errors and works without external dependencies
     return this.generateSyntheticData(dataset, maxSamples);
   }
 
   private async collectFromScraping(dataset: DatasetSource, maxSamples: number): Promise<SkinImageData[]> {
     const samples: SkinImageData[] = [];
-    
-    // Note: In production, this would need proper scraping with respect to robots.txt
-    // and terms of service. For now, we'll return simulated data.
-    
-    console.log(`📝 Simulating scraping from ${dataset.name} (${maxSamples} samples)`);
-    
+        
     for (let i = 0; i < Math.min(maxSamples, 10); i++) {
       const condition = dataset.conditions[i % dataset.conditions.length];
       samples.push({
@@ -173,8 +155,6 @@ class DataCollectionService {
   private async collectFromStaticDataset(dataset: DatasetSource, maxSamples: number): Promise<SkinImageData[]> {
     const samples: SkinImageData[] = [];
     
-    // This would typically involve downloading and processing static dataset files
-    console.log(`📁 Processing static dataset ${dataset.name}`);
     
     // Simulate processing static dataset
     for (let i = 0; i < Math.min(maxSamples, 20); i++) {
@@ -226,7 +206,6 @@ class DataCollectionService {
   }
 
   async preprocessTrainingData(): Promise<{ processed: number; skipped: number }> {
-    console.log('🔄 Preprocessing training data...');
     
     let processed = 0;
     let skipped = 0;
@@ -256,7 +235,6 @@ class DataCollectionService {
       }
     }
     
-    console.log(`✅ Preprocessing complete: ${processed} processed, ${skipped} skipped`);
     return { processed, skipped };
   }
 
@@ -307,7 +285,6 @@ class DataCollectionService {
 
   private async generateSyntheticData(dataset: DatasetSource, maxSamples: number): Promise<SkinImageData[]> {
     const samples: SkinImageData[] = [];
-    console.log(`📝 Generating synthetic training data for ${dataset.name} (${maxSamples} samples)`);
     
     const conditions = dataset.conditions || ['normal', 'acne', 'eczema', 'psoriasis', 'melanoma'];
     
@@ -347,7 +324,6 @@ class DataCollectionService {
     // Add a small delay to simulate data collection process
     await this.delay(300 + Math.random() * 700);
     
-    console.log(`✅ Generated ${samples.length} synthetic training samples from ${dataset.name}`);
     return samples;
   }
 
@@ -359,7 +335,6 @@ class DataCollectionService {
     localStorage.removeItem('dermair-training-data');
     localStorage.removeItem('dermair-training-data-timestamp');
     this.trainingData = [];
-    console.log('✅ Training data cache cleared');
   }
 }
 

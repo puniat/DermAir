@@ -2,8 +2,6 @@
  * API Route: AI Risk Analysis with Groq (Llama 3.1 70B)
  * 
  * POST /api/ai/analyze-risk
- * 
- * Generates AI-powered risk assessment using Groq's fast inference
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -20,8 +18,6 @@ interface RequestBody {
 }
 
 export async function POST(req: NextRequest) {
-  console.log('[Groq API] Received request');
-  
   try {
     const body: RequestBody = await req.json();
     const { weather, profile, recentLogs } = body;
@@ -37,9 +33,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check if API key is configured
     if (!process.env.GROQ_API_KEY) {
-      console.error('[Groq API] API key not configured');
       return NextResponse.json(
         { 
           error: 'Groq API key not configured',
@@ -49,9 +43,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    console.log('[Groq API] Calling AI analysis...');
-    
-    // Prepare input for Groq
     const input = {
       weather: {
         temp: weather.temperature,
@@ -77,13 +68,11 @@ export async function POST(req: NextRequest) {
       season: ['Winter', 'Spring', 'Summer', 'Fall'][Math.floor((new Date().getMonth() + 1) / 3) % 4]
     };
 
-    // Call Groq AI for analysis
     const startTime = Date.now();
     const analysis = await groqAI.analyzeRisk(input);
     const processingTime = Date.now() - startTime;
 
     if (!analysis) {
-      console.error('[Groq API] AI analysis returned null');
       return NextResponse.json(
         { 
           error: 'AI analysis failed',
@@ -93,9 +82,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    console.log('[Groq API] ✅ Analysis successful in', processingTime, 'ms');
-
-    // Return AI analysis
     return NextResponse.json({
       success: true,
       analysis,
@@ -105,13 +91,6 @@ export async function POST(req: NextRequest) {
     });
 
   } catch (error) {
-    console.error('[Groq API] ❌ Error:', error);
-    console.error('[Groq API] Error details:', {
-      name: error instanceof Error ? error.name : 'Unknown',
-      message: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined
-    });
-    
     return NextResponse.json(
       { 
         error: 'Failed to generate AI analysis',

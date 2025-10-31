@@ -50,9 +50,7 @@ export class NotificationService {
     }
     
     try {
-      console.log('Requesting notification permission...');
       const permission = await Notification.requestPermission();
-      console.log('Permission result:', permission);
       this.permission = permission;
       
       // Also update the global Notification.permission reference

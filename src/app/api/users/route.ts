@@ -18,8 +18,7 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({ success: true, data: user });
-  } catch (error) {
-    console.error('Error fetching user:', error);
+  } catch (error: any) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -33,7 +32,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Valid profile with ID is required' }, { status: 400 });
     }
 
-    // Check if user already exists
     const existingUser = await getUserProfile(profile.id);
     if (existingUser) {
       return NextResponse.json({ error: 'User already exists' }, { status: 409 });
@@ -42,8 +40,7 @@ export async function POST(request: NextRequest) {
     await saveUserProfile(profile);
     const user = await getUserProfile(profile.id);
     return NextResponse.json({ success: true, data: user }, { status: 201 });
-  } catch (error) {
-    console.error('Error creating user:', error);
+  } catch (error: any) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -57,20 +54,17 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
     }
 
-    // Get existing profile
     const existingProfile = await getUserProfile(userId);
     if (!existingProfile) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Merge updates with existing profile
     const updatedProfile = { ...existingProfile, ...updates };
     await saveUserProfile(updatedProfile);
     
     const user = await getUserProfile(userId);
     return NextResponse.json({ success: true, data: user });
-  } catch (error) {
-    console.error('Error updating user:', error);
+  } catch (error: any) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

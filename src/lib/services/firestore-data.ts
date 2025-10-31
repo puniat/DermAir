@@ -28,10 +28,10 @@ export async function checkUsernameExists(username: string): Promise<boolean> {
     const q = query(profilesRef, where('username', '==', username.toLowerCase()));
     const snapshot = await getDocs(q);
     
-    console.log(`🔍 Checking username "${username}":`, snapshot.empty ? 'Available' : 'Taken');
+
     return !snapshot.empty;
   } catch (error: any) {
-    console.error('❌ Error checking username:', error);
+    console.error('Error checking username:', error);
     return false;
   }
 }
@@ -42,10 +42,10 @@ export async function checkEmailExists(email: string): Promise<boolean> {
     const q = query(profilesRef, where('email', '==', email.toLowerCase()));
     const snapshot = await getDocs(q);
     
-    console.log(`🔍 Checking email "${email}":`, snapshot.empty ? 'Available' : 'Taken');
+
     return !snapshot.empty;
   } catch (error: any) {
-    console.error('❌ Error checking email:', error);
+    console.error('Error checking email:', error);
     return false;
   }
 }
@@ -57,12 +57,12 @@ export async function getUserByUsername(username: string): Promise<UserProfile |
     const snapshot = await getDocs(q);
     
     if (snapshot.empty) {
-      console.log('❌ User not found with username:', username);
+
       return null;
     }
     
     const data = snapshot.docs[0].data();
-    console.log('✅ User found with username:', username);
+
     
     // Convert Firestore data back to UserProfile type
     const profile: UserProfile = {
@@ -86,7 +86,7 @@ export async function getUserByUsername(username: string): Promise<UserProfile |
     
     return profile;
   } catch (error: any) {
-    console.error('❌ Error getting user by username:', error);
+    console.error(' Error getting user by username:', error);
     return null;
   }
 }
@@ -101,10 +101,9 @@ export async function getUserSummary(userId: string): Promise<{
   streakDays: number;
 } | null> {
   try {
-    console.log('🔍 Getting user summary for:', userId);
     const profile = await getUserProfile(userId);
     if (!profile) {
-      console.log('❌ No profile found for summary');
+
       return null;
     }
 
@@ -114,23 +113,19 @@ export async function getUserSummary(userId: string): Promise<{
     try {
       // Get check-ins count (may not exist for new users)
       const checkInsRef = collection(db, 'profiles', userId, 'checkins');
-      console.log('🔍 Querying check-ins at path:', `profiles/${userId}/checkins`);
       
       const checkInsSnapshot = await getDocs(checkInsRef);
       checkInsCount = checkInsSnapshot.size;
-      console.log('📊 Found', checkInsCount, 'check-ins');
 
       // Calculate streak days (consecutive days with check-ins)
       if (checkInsCount > 0) {
         const checkInDates = checkInsSnapshot.docs
           .map(doc => {
             const data = doc.data();
-            console.log('📅 Check-in date data:', data.date);
             return data.date?.toDate?.() || new Date(data.date);
           })
           .sort((a, b) => b.getTime() - a.getTime());
 
-        console.log('📅 Sorted check-in dates:', checkInDates.map(d => d.toISOString()));
 
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -147,10 +142,9 @@ export async function getUserSummary(userId: string): Promise<{
             break;
           }
         }
-        console.log('🔥 Calculated streak days:', streakDays);
       }
     } catch (checkInsError) {
-      console.error('⚠️ Error loading check-ins:', checkInsError);
+      console.error('Error loading check-ins:', checkInsError);
       // Continue with checkInsCount = 0 and streakDays = 0
     }
 
@@ -171,10 +165,9 @@ export async function getUserSummary(userId: string): Promise<{
       streakDays
     };
 
-    console.log('✅ User summary generated:', summary);
     return summary;
   } catch (error: any) {
-    console.error('❌ Error getting user summary:', error);
+    console.error('Error getting user summary:', error);
     // Return null to indicate failure
     return null;
   }
@@ -187,12 +180,10 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
     const snapshot = await getDoc(ref);
     
     if (!snapshot.exists()) {
-      console.log('❌ Profile not found for user:', userId);
       return null;
     }
     
     const data = snapshot.data();
-    console.log('✅ Profile loaded from Firestore:', userId);
     
     // Convert Firestore data back to UserProfile type
     const profile: UserProfile = {
@@ -215,7 +206,7 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
     
     return profile;
   } catch (error: any) {
-    console.error('❌ Error loading profile from Firestore:', {
+    console.error('Error loading profile from Firestore:', {
       userId,
       message: error.message,
       code: error.code
@@ -257,15 +248,11 @@ export async function saveUserProfile(profile: UserProfile) {
   if (profile.skin_type) data.skin_type = profile.skin_type;
 
   try {
-    console.log('🔄 Attempting to save profile to Firestore...', {
-      profileId: profile.id,
-      collection: 'profiles',
-      dataKeys: Object.keys(data)
-    });
+
     await setDoc(ref, data, { merge: true });
-    console.log('✅ Profile saved to Firestore:', profile.id);
+
   } catch (error: any) {
-    console.error('❌ Firestore save error:', {
+    console.error('Firestore save error:', {
       message: error.message,
       code: error.code,
       name: error.name,

@@ -31,8 +31,7 @@ export async function GET(request: NextRequest) {
     } else {
       return NextResponse.json({ success: true, data: logs });
     }
-  } catch (error) {
-    console.error('Error fetching daily logs:', error);
+  } catch (error: any) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -64,8 +63,7 @@ export async function POST(request: NextRequest) {
     await saveCheckIn(userId, dailyLog);
     
     return NextResponse.json({ success: true, data: dailyLog }, { status: 201 });
-  } catch (error) {
-    console.error('Error creating daily log:', error);
+  } catch (error: any) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -83,8 +81,7 @@ export async function PUT(request: NextRequest) {
     await updateCheckIn(userId, logId, updates);
     
     return NextResponse.json({ success: true, message: 'Daily log updated successfully' });
-  } catch (error) {
-    console.error('Error updating daily log:', error);
+  } catch (error: any) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

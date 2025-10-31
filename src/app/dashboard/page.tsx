@@ -48,10 +48,8 @@ function DashboardContent() {
   const { data: weather, loading: weatherLoading, error: weatherError, refetch: refetchWeather } = useWeather(profile);
   const { checkIns, loading: checkInsLoading, addCheckIn, loadCheckInsFromFirestore } = useCheckIns();
   
-  // Load check-ins from Firestore when profile is available
   useEffect(() => {
     if (profile?.id) {
-      console.log('📥 [Dashboard] Loading check-ins from Firestore for user:', profile.id);
       loadCheckInsFromFirestore(profile.id);
     }
   }, [profile?.id]);
@@ -67,38 +65,26 @@ function DashboardContent() {
     useAdvancedAI
   );
 
-  // Effects
   useEffect(() => {
     const loadProfile = async () => {
       if (!sessionLoading) {
-        console.log('[Dashboard] Session loading complete:', { session, hasSession: !!session, hasProfile: !!session?.profile, userId: session?.userId });
-        
         if (!session) {
-          console.log('[Dashboard] No session found, redirecting to landing page');
           router.push('/landing');
           return;
         }
         
-        // If session exists but no profile, try loading from Firebase
         if (!session.profile && session.userId) {
-          console.log('[Dashboard] Session exists but no profile, loading from Firebase for user:', session.userId);
           const firebaseProfile = await getUserProfile(session.userId);
           if (firebaseProfile) {
-            console.log('[Dashboard] ✅ Profile loaded from Firebase:', { id: firebaseProfile.id, username: firebaseProfile.username });
             setProfile(firebaseProfile);
             updateProfile(firebaseProfile);
           } else {
-            console.log('[Dashboard] ❌ No profile found in Firebase for userId:', session.userId);
-            // No profile found, redirect to landing for authentication
-            console.log('[Dashboard] No profile in Firebase, redirecting to landing page');
             router.push('/landing');
             return;
           }
         } else if (session.profile) {
-          console.log('[Dashboard] Profile already in session:', { id: session.profile.id, username: session.profile.username });
           setProfile(session.profile);
         } else {
-          console.log('[Dashboard] No profile and no userId, redirecting to landing page');
           router.push('/landing');
           return;
         }
@@ -173,12 +159,10 @@ function DashboardContent() {
       setShowCheckIn(false);
       toast.success("Check-in recorded successfully!");
       
-      // Refresh weather data to trigger new risk assessment
       if (weather) {
         await refetchWeather();
       }
     } catch (error) {
-      console.error('Error submitting check-in:', error);
       toast.error("Failed to record check-in. Please try again.");
     }
   };

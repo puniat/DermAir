@@ -12,17 +12,10 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Debug: Log Firebase config (without sensitive data)
-console.log('🔥 Firebase Config:', {
-  projectId: firebaseConfig.projectId,
-  authDomain: firebaseConfig.authDomain,
-  hasApiKey: !!firebaseConfig.apiKey,
-  hasAppId: !!firebaseConfig.appId
-});
 
-// Prevent re-initialization in Next.js
+
+
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApps()[0];
-console.log('🔥 Firebase initialized:', app.name, '- Apps count:', getApps().length);
 
 export const db = getFirestore(app);
-console.log('🔥 Firestore instance created for project:', firebaseConfig.projectId);
+

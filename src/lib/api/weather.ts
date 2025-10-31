@@ -5,12 +5,6 @@ const BASE_URL = "https://api.openweathermap.org/data/2.5";
 const AIR_POLLUTION_URL = "https://api.openweathermap.org/data/2.5/air_pollution";
 const GEO_URL = "https://api.openweathermap.org/geo/1.0";
 
-// Debug logging for API key
-if (typeof window !== 'undefined') {
-  console.log('API Key configured:', !!OPENWEATHER_API_KEY);
-  console.log('API Key length:', OPENWEATHER_API_KEY?.length || 0);
-}
-
 export interface OpenWeatherResponse {
   main: {
     temp: number;
@@ -87,7 +81,6 @@ export async function fetchWeatherByZipcode(zipcode: string, countryCode: string
     }
 
     const geoData: GeocodingResponse = await geoResponse.json();
-    console.log(`📍 Zipcode ${zipcode} resolved to: ${geoData.name}, ${geoData.country} (${geoData.lat}, ${geoData.lon})`);
 
     // Now fetch weather data using the coordinates
     return await fetchWeatherData(geoData.lat, geoData.lon);
@@ -170,16 +163,7 @@ export async function fetchWeatherData(
       timestamp: new Date(),
     };
 
-    // Log comparison data for debugging accuracy
-    console.log(`🌡️ Weather Data Accuracy Check:
-      Actual: ${result.temperature}°C (${Math.round(result.temperature * 9/5 + 32)}°F)
-      Feels Like: ${Math.round(weatherData.main.feels_like * 10) / 10}°C (${Math.round(weatherData.main.feels_like * 9/5 + 32)}°F)
-      Humidity: ${result.humidity}%
-      Pressure: ${result.pressure} hPa
-      Wind: ${result.wind_speed} km/h
-    `);
-
-    return result;
+     return result;
   } catch (error) {
     console.error("Error fetching weather data:", error);
     console.warn("Falling back to mock weather data");
@@ -242,7 +226,6 @@ export async function fetchWeatherByCity(city: string): Promise<WeatherData> {
  * Get user's current location using browser geolocation
  */
 export async function getCurrentLocation(): Promise<{ latitude: number; longitude: number }> {
-  console.log('[getCurrentLocation] Starting geolocation request...');
   
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) {
@@ -253,11 +236,6 @@ export async function getCurrentLocation(): Promise<{ latitude: number; longitud
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        console.log('[getCurrentLocation] Success:', {
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          accuracy: position.coords.accuracy
-        });
         resolve({
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
@@ -361,8 +339,6 @@ function calculatePollenEstimate(weatherData: OpenWeatherResponse, date: Date) {
  * Test the API key with a simple request
  */
 export async function testApiKey(): Promise<{ success: boolean; error?: string }> {
-  console.log('🔑 Testing API key...');
-  console.log('🔑 API key loaded:', OPENWEATHER_API_KEY ? `${OPENWEATHER_API_KEY.substring(0, 8)}...` : 'NOT FOUND');
   
   if (!OPENWEATHER_API_KEY) {
     return { success: false, error: "No API key configured" };
@@ -370,16 +346,12 @@ export async function testApiKey(): Promise<{ success: boolean; error?: string }
 
   try {
     const testUrl = `${BASE_URL}/weather?q=London&appid=${OPENWEATHER_API_KEY}&units=metric`;
-    console.log('🌐 Making test request to:', testUrl.replace(OPENWEATHER_API_KEY, 'API_KEY_HIDDEN'));
     
     const response = await fetch(testUrl);
     
-    console.log('📡 Response status:', response.status);
-    console.log('📡 Response headers:', Object.fromEntries(response.headers.entries()));
 
     if (response.status === 401) {
       const errorText = await response.text();
-      console.log('❌ 401 error response:', errorText);
       return { success: false, error: `Invalid API key - ${errorText}` };
     }
 
@@ -389,15 +361,14 @@ export async function testApiKey(): Promise<{ success: boolean; error?: string }
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.log(`❌ ${response.status} error response:`, errorText);
+
       return { success: false, error: `API error: ${response.status} - ${errorText}` };
     }
 
     const data = await response.json();
-    console.log('✅ Success! Sample data:', { name: data.name, country: data.sys?.country });
+
     return { success: true };
   } catch (error) {
-    console.log('❌ Network error:', error);
     return { 
       success: false, 
       error: error instanceof Error ? error.message : "Network error" 
@@ -443,7 +414,6 @@ export async function getLocationByZipcode(zipcode: string, countryCode: string 
   lon: number;
 }> {
   // Log input parameters for debugging
-  console.log('[getLocationByZipcode] Input:', { zipcode, countryCode });
   
   if (!OPENWEATHER_API_KEY) {
     console.error('[getLocationByZipcode] API key not configured');
@@ -451,7 +421,7 @@ export async function getLocationByZipcode(zipcode: string, countryCode: string 
   }
 
   const url = `${GEO_URL}/zip?zip=${zipcode},${countryCode}&appid=${OPENWEATHER_API_KEY}`;
-  console.log('[getLocationByZipcode] Request URL:', url.replace(OPENWEATHER_API_KEY, 'HIDDEN'));
+ 
 
   try {
     const response = await fetch(url, {
@@ -461,7 +431,6 @@ export async function getLocationByZipcode(zipcode: string, countryCode: string 
       },
     });
 
-    console.log('[getLocationByZipcode] Response status:', response.status);
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -477,8 +446,7 @@ export async function getLocationByZipcode(zipcode: string, countryCode: string 
     }
 
     const data: GeocodingResponse = await response.json();
-    console.log('[getLocationByZipcode] Success:', { name: data.name, country: data.country });
-    
+     
     return {
       name: data.name,
       country: data.country,
@@ -498,7 +466,7 @@ export async function reverseGeocode(
   latitude: number,
   longitude: number
 ): Promise<{ city: string; country: string }> {
-  console.log('[reverseGeocode] Input:', { latitude, longitude });
+
   
   if (!OPENWEATHER_API_KEY) {
     console.error("[reverseGeocode] API key not configured");
@@ -506,7 +474,7 @@ export async function reverseGeocode(
   }
 
   const url = `https://api.openweathermap.org/geo/1.0/reverse?lat=${latitude}&lon=${longitude}&limit=1&appid=${OPENWEATHER_API_KEY}`;
-  console.log('[reverseGeocode] Request URL:', url.replace(OPENWEATHER_API_KEY, 'HIDDEN'));
+
 
   try {
     const response = await fetch(url, {
@@ -516,7 +484,7 @@ export async function reverseGeocode(
       },
     });
 
-    console.log('[reverseGeocode] Response status:', response.status);
+
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -530,7 +498,6 @@ export async function reverseGeocode(
     }
 
     const data = await response.json();
-    console.log('[reverseGeocode] API Response:', data);
     
     if (!data.length) {
       console.error('[reverseGeocode] No location data returned');
@@ -541,8 +508,7 @@ export async function reverseGeocode(
       city: data[0].name || "Unknown Location",
       country: data[0].country || "Unknown",
     };
-    console.log('[reverseGeocode] Success:', result);
-    
+     
     return result;
   } catch (error) {
     console.error("[reverseGeocode] Exception:", error);

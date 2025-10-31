@@ -86,39 +86,32 @@ export class GeminiAIService {
     recentLogs: DailyLog[]
   ): Promise<GeminiRiskAnalysis | null> {
     if (!this.model) {
-      console.warn('⚠️ Gemini API key not configured. Using fallback algorithm.');
+      console.warn('Gemini API key not configured. Using fallback algorithm.');
       return null;
     }
 
     try {
-      console.log('🤖 [Gemini] Building prompt...');
       const prompt = this.buildRiskAnalysisPrompt(weather, profile, recentLogs);
       
-      console.log('🤖 [Gemini] Calling Gemini 1.5 Flash...');
       const result = await this.model.generateContent(prompt);
       const response = result.response;
       const text = response.text();
 
-      console.log('🤖 [Gemini] Received response, parsing JSON...');
-      console.log('🤖 [Gemini] Response preview:', text.substring(0, 200));
-
       // Parse JSON response
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
-        console.error('❌ [Gemini] Invalid JSON response. Full text:', text);
+        console.error(' [Gemini] Invalid JSON response. Full text:', text);
         throw new Error('Invalid JSON response from Gemini');
       }
 
       const analysis: GeminiRiskAnalysis = JSON.parse(jsonMatch[0]);
-      console.log('✅ [Gemini] Analysis parsed successfully');
-      console.log('🤖 [Gemini] Risk Level:', analysis.riskLevel, '| Score:', analysis.riskScore);
       
       return analysis;
 
     } catch (error) {
-      console.error('❌ [Gemini] Error calling Gemini AI:', error);
+      console.error(' [Gemini] Error calling Gemini AI:', error);
       if (error instanceof Error) {
-        console.error('❌ [Gemini] Error details:', {
+        console.error(' [Gemini] Error details:', {
           name: error.name,
           message: error.message,
           stack: error.stack

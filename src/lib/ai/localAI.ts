@@ -29,9 +29,7 @@ export class LocalDermatologyAI {
       // Try to load existing model
       this.model = await tf.loadLayersModel('localstorage://dermair-ai-model');
       this.isModelLoaded = true;
-      console.log('✅ Local AI model loaded successfully');
     } catch (error) {
-      console.log('🔄 No existing model found, creating new model...');
       await this.createNewModel();
     }
   }
@@ -96,7 +94,6 @@ export class LocalDermatologyAI {
     });
     
     this.isModelLoaded = true;
-    console.log('✅ New AI model created');
   }
   
   async analyzeImage(imageFile: File, userContext?: {
@@ -286,7 +283,6 @@ export class LocalDermatologyAI {
   private async retrainModel(): Promise<void> {
     if (!this.model || this.trainingQueue.length === 0) return;
     
-    console.log(`🔄 Retraining model with ${this.trainingQueue.length} new samples...`);
     
     try {
       // Prepare training data
@@ -306,9 +302,8 @@ export class LocalDermatologyAI {
       // Clear training queue
       this.trainingQueue = [];
       
-      console.log('✅ Model retrained successfully');
     } catch (error) {
-      console.error('❌ Model retraining failed:', error);
+      console.error('Model retraining failed:', error);
     }
   }
   
@@ -348,9 +343,8 @@ export class LocalDermatologyAI {
     
     try {
       await this.model.save('localstorage://dermair-ai-model');
-      console.log('✅ Model saved successfully');
     } catch (error) {
-      console.error('❌ Failed to save model:', error);
+      console.error('Failed to save model:', error);
     }
   }
   

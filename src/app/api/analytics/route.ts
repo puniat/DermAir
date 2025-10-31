@@ -137,10 +137,7 @@ export async function GET(request: NextRequest) {
     };
 
     return NextResponse.json({ success: true, data: analytics });
-  } catch (error) {
-    console.error('Error fetching analytics:', error);
-    
-    // Return empty analytics data if database is unavailable
+  } catch (error: any) {
     const emptyAnalytics = {
       trends: {
         avgItchScore: 0,

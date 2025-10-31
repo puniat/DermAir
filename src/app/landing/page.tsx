@@ -81,16 +81,9 @@ export default function LandingPage() {
           if (profile) {
             setUserProfile(profile);
             
-            console.log('[Landing] Profile loaded:', {
-              username: profile.username,
-              hasPin: !!profile.pin,
-              pinLength: profile.pin?.length || 0
-            });
-            
             // All users must have a PIN - no legacy users
             if (profile.pin) {
               // User has PIN - require verification
-              console.log('[Landing] PIN detected, showing verification screen');
               setUserState('verifying');
             } else {
               // Data error - user exists but has no PIN
@@ -143,23 +136,16 @@ export default function LandingPage() {
       const isValid = await verifyPin(pin, userProfile.pin);
       
       if (isValid) {
-        console.log('[Landing] PIN verified successfully');
-        
         try {
-          console.log('[Landing] Fetching user summary for ID:', userProfile.id);
           
           // Fetch user summary from SQLite API
           const response = await fetch(`/api/user-summary?userId=${encodeURIComponent(userProfile.id)}`);
           const result = await response.json();
           
-          console.log('[Landing] API response:', result);
-          
           if (result.success && result.data) {
             const summary = result.data;
-            console.log('[Landing] Setting user summary with check-ins:', summary.checkInsCount, 'streak:', summary.streakDays);
             setUserSummary(summary);
           } else {
-            console.warn('[Landing] API returned no data, using defaults');
             setUserSummary({
               username: userProfile.username || username,
               displayName: userProfile.username || username,

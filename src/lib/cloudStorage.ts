@@ -69,15 +69,12 @@ class CloudStorageService {
   async initialize(): Promise<boolean> {
     try {
       if (!isSupabaseConfigured) {
-        console.warn('🚨 Supabase not configured. Please set environment variables:');
-        console.warn('NEXT_PUBLIC_SUPABASE_URL');
-        console.warn('NEXT_PUBLIC_SUPABASE_ANON_KEY');
-        console.warn('See CLOUD_SETUP.md for detailed setup instructions');
+        console.warn(' Supabase not configured. Please set environment variables:');
         return false;
       }
 
       if (!supabase) {
-        console.error('❌ Failed to create Supabase client');
+        console.error(' Failed to create Supabase client');
         return false;
       }
 
@@ -88,10 +85,9 @@ class CloudStorageService {
       };
       this.isInitialized = true;
 
-      console.log('✅ Cloud storage initialized with Supabase');
       return true;
     } catch (error) {
-      console.error('❌ Failed to initialize cloud storage:', error);
+      console.error('Failed to initialize cloud storage:', error);
       return false;
     }
   }
@@ -156,7 +152,6 @@ class CloudStorageService {
         return false;
       }
 
-      console.log('✅ Profile saved to cloud');
       return true;
     } catch (error) {
       console.error('Failed to save profile:', error);
@@ -221,7 +216,6 @@ class CloudStorageService {
         return false;
       }
 
-      console.log('✅ Check-in saved to cloud');
       return true;
     } catch (error) {
       console.error('Failed to save check-in:', error);
@@ -284,7 +278,6 @@ class CloudStorageService {
         return false;
       }
 
-      console.log('✅ Training data saved to cloud');
       return true;
     } catch (error) {
       console.error('Failed to save training data:', error);
@@ -352,9 +345,8 @@ class CloudStorageService {
       }
 
       if (success) {
-        console.log('✅ Local data migration completed successfully');
       } else {
-        console.warn('⚠️ Local data migration completed with some errors');
+        console.warn('Local data migration completed with some errors');
       }
 
       return success;
